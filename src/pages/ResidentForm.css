@@ -1,0 +1,139 @@
+.resident-form-page {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 12px;
+}
+
+.back-btn {
+  padding: 8px;
+  color: var(--text-muted);
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.back-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.resident-form {
+  background: white;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .resident-form {
+    padding: 32px;
+  }
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-section label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  color: #94a3b8;
+}
+
+.resident-form input,
+.resident-form select {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: #f8fafc;
+}
+
+.resident-form input:focus,
+.resident-form select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-actions {
+  margin-top: 12px;
+}
+
+.submit-btn {
+  width: 100%;
+  background: var(--primary);
+  color: white;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
