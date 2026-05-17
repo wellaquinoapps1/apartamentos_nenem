@@ -19,6 +19,7 @@ const Residents = () => {
   const [stats, setStats] = useState({ ativos: 0, pendentes: 0 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('Todos'); // 'Todos', 'ativos', 'pendentes'
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, name: '', apto_id: null });
   const [detailModal, setDetailModal] = useState({ isOpen: false, resident: null });
 
@@ -47,7 +48,7 @@ const Residents = () => {
         apto_id: res.apartamentos?.id || null,
         phone: res.telefone || '--',
         email: res.email || '--',
-        status: res.cpf ? 'ativo' : 'pendente',
+        status: res.apartamentos?.numero ? 'ativo' : 'pendente',
         foto_url: res.foto_url,
         local_trabalho: res.local_trabalho || '--',
         dia_pagamento: res.dia_pagamento || null
@@ -102,10 +103,14 @@ const Residents = () => {
     }
   };
 
-  const filteredResidents = residents.filter(res => 
-    res.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    res.apto.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredResidents = residents.filter(res => {
+    const matchesSearch = res.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          res.apto.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+    if (filter === 'ativos') return res.status === 'ativo';
+    if (filter === 'pendentes') return res.status === 'pendente';
+    return true;
+  });
 
   return (
     <div className="residents-page">
@@ -131,18 +136,28 @@ const Residents = () => {
       </div>
 
       <div className="residents-stats">
-        <div className="r-stat-card blue">
-          <CheckCircle size={20} />
+        <div 
+          className={`r-stat-card ${filter === 'ativos' ? 'active-filter' : 'outline'}`}
+          onClick={() => setFilter(filter === 'ativos' ? 'Todos' : 'ativos')}
+          style={{ cursor: 'pointer', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', opacity: filter === 'pendentes' ? 0.6 : 1 }}
+          title="Clique para filtrar moradores ativos nos aptos"
+        >
+          <CheckCircle size={20} className="stat-icon" color={filter === 'ativos' ? '#ffffff' : '#2563eb'} />
           <div className="r-stat-info">
             <span className="r-stat-value">{stats.ativos}</span>
-            <span className="r-stat-label">ATIVOS</span>
+            <span className="r-stat-label">ATIVOS NOS APTOS</span>
           </div>
         </div>
-        <div className="r-stat-card outline">
-          <Clock size={20} color="#ef4444" />
+        <div 
+          className={`r-stat-card ${filter === 'pendentes' ? 'active-filter' : 'outline'}`}
+          onClick={() => setFilter(filter === 'pendentes' ? 'Todos' : 'pendentes')}
+          style={{ cursor: 'pointer', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', opacity: filter === 'ativos' ? 0.6 : 1 }}
+          title="Clique para filtrar moradores sem apto"
+        >
+          <Clock size={20} className="stat-icon" color={filter === 'pendentes' ? '#ffffff' : '#ef4444'} />
           <div className="r-stat-info">
             <span className="r-stat-value">{stats.pendentes}</span>
-            <span className="r-stat-label">PENDENTES</span>
+            <span className="r-stat-label">SEM APTO (PENDENTES)</span>
           </div>
         </div>
       </div>
@@ -156,7 +171,7 @@ const Residents = () => {
           filteredResidents.map((res) => (
             <div 
               key={res.id} 
-              className="resident-item clickable"
+              className={`resident-item clickable ${res.status === 'ativo' ? 'ativo' : ''}`}
               onClick={() => setDetailModal({ isOpen: true, resident: res })}
             >
               <div className="resident-avatar">
@@ -169,16 +184,15 @@ const Residents = () => {
               <div className="resident-info">
                 <div className="name-row">
                   <span className="res-name">{res.name}</span>
-                  <span className="res-apto">Apto {res.apto}</span>
+                  {res.apto !== 'S/N' && (
+                    <span className="res-apto">Apto {res.apto}</span>
+                  )}
                 </div>
                 <div className="phone-row">
                   <Phone size={14} />
                   <span>{res.phone}</span>
                 </div>
               </div>
-              {res.status === 'pendente' && (
-                <span className="status-badge-res">PENDENTE</span>
-              )}
               <div className="resident-actions">
                 <Link 
                   to={`/moradores/editar/${res.id}`} 
@@ -252,10 +266,9 @@ const Residents = () => {
               <div className="profile-header-info">
                 <h2>{detailModal.resident.name}</h2>
                 <div className="badge-row">
-                  <span className="res-apto-badge">Apto {detailModal.resident.apto}</span>
-                  <span className={`res-status-badge ${detailModal.resident.status}`}>
-                    {detailModal.resident.status === 'ativo' ? 'Ativo' : 'Pendente'}
-                  </span>
+                  {detailModal.resident.apto !== 'S/N' && (
+                    <span className="res-apto-badge">Apto {detailModal.resident.apto}</span>
+                  )}
                 </div>
               </div>
             </div>
