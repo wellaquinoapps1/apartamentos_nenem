@@ -49,6 +49,55 @@
   color: var(--primary);
 }
 
+.sidebar-footer {
+  margin-top: auto;
+  padding: 20px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-main);
+  padding: 8px;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s;
+}
+
+.sidebar-profile:hover {
+  background-color: var(--primary-light);
+}
+
+.sidebar-profile img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-main);
+}
+
+.profile-role {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
 .nav-link.active {
   background: var(--primary);
   color: white;

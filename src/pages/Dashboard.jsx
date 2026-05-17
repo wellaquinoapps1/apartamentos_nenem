@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   User
 } from 'lucide-react';
+import { getSettings } from '../lib/settings';
 import './Dashboard.css';
 import ApartmentDetailsModal from '../components/ApartmentDetailsModal';
 
@@ -25,6 +26,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedAptoId, setSelectedAptoId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [settings, setSettings] = useState(getSettings());
 
   const fetchStats = async () => {
     try {
@@ -92,12 +94,15 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchStats();
+    const handleUpdate = () => setSettings(getSettings());
+    window.addEventListener('settingsUpdated', handleUpdate);
+    return () => window.removeEventListener('settingsUpdated', handleUpdate);
   }, []);
 
   return (
     <div className="dashboard-page">
       <header className="page-header">
-        <h1>Residencial Vista</h1>
+        <h1>{settings.nomeResidencial}</h1>
         <p>Painel do Administrador</p>
       </header>
 

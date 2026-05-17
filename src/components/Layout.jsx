@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useLocation, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
@@ -9,10 +9,18 @@ import {
   Bell,
   Menu
 } from 'lucide-react';
+import { getSettings } from '../lib/settings';
 import './Layout.css';
 
 const Layout = ({ children }) => {
   const location = useLocation();
+  const [settings, setSettings] = useState(getSettings());
+
+  useEffect(() => {
+    const handleUpdate = () => setSettings(getSettings());
+    window.addEventListener('settingsUpdated', handleUpdate);
+    return () => window.removeEventListener('settingsUpdated', handleUpdate);
+  }, []);
 
   const navItems = [
     { path: '/', label: 'Início', icon: <LayoutDashboard size={20} /> },
@@ -29,7 +37,7 @@ const Layout = ({ children }) => {
         <div className="sidebar-header">
           <div className="logo">
             <Building2 className="logo-icon" />
-            <span>Moradores</span>
+            <span>{settings.nomeResidencial}</span>
           </div>
         </div>
         <nav className="sidebar-nav">
@@ -44,6 +52,15 @@ const Layout = ({ children }) => {
             </NavLink>
           ))}
         </nav>
+        <div className="sidebar-footer">
+          <Link to="/dev" className="sidebar-profile" title="Área do Desenvolvedor">
+            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(settings.nomeAdmin)}&background=${settings.corAvatar}&color=fff`} alt="Profile" />
+            <div className="profile-info">
+              <span className="profile-name">{settings.nomeAdmin}</span>
+              <span className="profile-role">Desenvolvedor</span>
+            </div>
+          </Link>
+        </div>
       </aside>
 
       {/* Mobile Header */}
@@ -51,14 +68,14 @@ const Layout = ({ children }) => {
         <button className="menu-btn">
           <Menu size={24} />
         </button>
-        <span className="brand-name">Moradores</span>
+        <span className="brand-name">{settings.nomeResidencial}</span>
         <div className="header-actions">
           <button className="icon-btn">
             <Bell size={24} />
           </button>
-          <div className="profile-avatar">
-            <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" alt="Profile" />
-          </div>
+          <Link to="/dev" className="profile-avatar" title="Área do Desenvolvedor">
+            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(settings.nomeAdmin)}&background=${settings.corAvatar}&color=fff`} alt="Profile" />
+          </Link>
         </div>
       </header>
 

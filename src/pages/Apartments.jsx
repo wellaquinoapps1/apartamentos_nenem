@@ -11,6 +11,7 @@ import {
   Calendar,
   Users
 } from 'lucide-react';
+import { getSettings } from '../lib/settings';
 import './Apartments.css';
 import ApartmentDetailsModal from '../components/ApartmentDetailsModal';
 
@@ -21,9 +22,13 @@ const Apartments = () => {
   const [filter, setFilter] = useState('Todos');
   const [selectedAptoId, setSelectedAptoId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [settings, setSettings] = useState(getSettings());
 
   useEffect(() => {
     fetchApartments();
+    const handleUpdate = () => setSettings(getSettings());
+    window.addEventListener('settingsUpdated', handleUpdate);
+    return () => window.removeEventListener('settingsUpdated', handleUpdate);
   }, []);
 
   const fetchApartments = async () => {
@@ -84,7 +89,7 @@ const Apartments = () => {
     <div className="apartments-page">
       <header className="page-header">
         <h1>Apartamentos</h1>
-        <p>Gestão de unidades e ocupação do Residencial Vista.</p>
+        <p>Gestão de unidades e ocupação do {settings.nomeResidencial}.</p>
       </header>
 
       <div className="search-filter-container">

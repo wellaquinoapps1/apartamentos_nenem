@@ -4,6 +4,7 @@ import Apartments from './pages/Apartments';
 import Residents from './pages/Residents';
 import Finance from './pages/Finance';
 import ResidentForm from './pages/ResidentForm';
+import DevArea from './pages/DevArea';
 import Layout from './components/Layout';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/moradores/editar/:id" element={<ResidentForm />} />
           <Route path="/financeiro" element={<Finance />} />
           <Route path="/ocorrencias" element={<div>Ocorrências</div>} />
+          <Route path="/dev" element={<DevArea />} />
         </Routes>
       </Layout>
     </Router>
