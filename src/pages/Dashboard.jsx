@@ -200,11 +200,13 @@ const Dashboard = () => {
                   setIsModalOpen(true);
                 }}
               >
-                <div className="apt-card-header">
-                  <span className="apt-number">Apto {apto.numero}</span>
+                <div className="apt-card-status">
                   <span className={`apt-badge ${isOccupied ? 'occupied' : 'vacant'}`}>
                     {isOccupied ? 'Ocupado' : 'Vazio'}
                   </span>
+                </div>
+                <div className="apt-card-title">
+                  <span className="apt-number">Apto {apto.numero}</span>
                 </div>
                 <div className="apt-card-body">
                   {residentFoto ? (
