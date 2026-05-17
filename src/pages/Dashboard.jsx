@@ -26,71 +26,71 @@ const Dashboard = () => {
   const [selectedAptoId, setSelectedAptoId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const fetchStats = async () => {
+    try {
+      const { count: aptos } = await supabase.from('apartamentos').select('*', { count: 'exact', head: true });
+      const { count: moradores } = await supabase.from('moradores').select('*', { count: 'exact', head: true });
+      const { count: pendencias } = await supabase.from('taxas').select('*', { count: 'exact', head: true }).eq('status', 'pendente');
+      const { count: ocorrencias } = await supabase.from('ocorrencias').select('*', { count: 'exact', head: true }).eq('status', 'aberta');
+
+      setStats({
+        apartamentos: aptos || 0,
+        moradores: moradores || 0,
+        pendencias: pendencias || 0,
+        ocorrencias: ocorrencias || 0
+      });
+
+      // Fetch apartments with residents
+      const { data: aptosData } = await supabase
+        .from('apartamentos')
+        .select('*, moradores(nome, foto_url)');
+
+      const sortedAptos = (aptosData || []).sort((a, b) =>
+        a.numero.localeCompare(b.numero, undefined, { numeric: true, sensitivity: 'base' })
+      );
+      setApartments(sortedAptos);
+
+      // Fetch recent activities
+      const { data: recentTaxas } = await supabase
+        .from('taxas')
+        .select('*, apartamentos(numero)')
+        .order('created_at', { ascending: false })
+        .limit(2);
+
+      const { data: recentOcorrencias } = await supabase
+        .from('ocorrencias')
+        .select('*, apartamentos(numero)')
+        .order('created_at', { ascending: false })
+        .limit(2);
+
+      const combinedActivities = [
+        ...(recentTaxas || []).map(t => ({
+          id: `tax-${t.id}`,
+          type: 'taxa',
+          title: `Unidade ${t.apartamentos?.numero}`,
+          message: t.status === 'pago' ? 'pagou o condomínio.' : 'tem uma nova taxa pendente.',
+          time: new Date(t.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          status: t.status === 'pago' ? 'success' : 'warning'
+        })),
+        ...(recentOcorrencias || []).map(o => ({
+          id: `oc-${o.id}`,
+          type: 'ocorrencia',
+          title: `Nova Ocorrência:`,
+          message: `${o.descricao} (Apto ${o.apartamentos?.numero})`,
+          time: new Date(o.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'warning'
+        }))
+      ].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 4);
+
+      setActivities(combinedActivities);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { count: aptos } = await supabase.from('apartamentos').select('*', { count: 'exact', head: true });
-        const { count: moradores } = await supabase.from('moradores').select('*', { count: 'exact', head: true });
-        const { count: pendencias } = await supabase.from('taxas').select('*', { count: 'exact', head: true }).eq('status', 'pendente');
-        const { count: ocorrencias } = await supabase.from('ocorrencias').select('*', { count: 'exact', head: true }).eq('status', 'aberta');
-
-        setStats({
-          apartamentos: aptos || 0,
-          moradores: moradores || 0,
-          pendencias: pendencias || 0,
-          ocorrencias: ocorrencias || 0
-        });
-
-        // Fetch apartments with residents
-        const { data: aptosData } = await supabase
-          .from('apartamentos')
-          .select('*, moradores(nome, foto_url)');
-
-        const sortedAptos = (aptosData || []).sort((a, b) =>
-          a.numero.localeCompare(b.numero, undefined, { numeric: true, sensitivity: 'base' })
-        );
-        setApartments(sortedAptos);
-
-        // Fetch recent activities
-        const { data: recentTaxas } = await supabase
-          .from('taxas')
-          .select('*, apartamentos(numero)')
-          .order('created_at', { ascending: false })
-          .limit(2);
-
-        const { data: recentOcorrencias } = await supabase
-          .from('ocorrencias')
-          .select('*, apartamentos(numero)')
-          .order('created_at', { ascending: false })
-          .limit(2);
-
-        const combinedActivities = [
-          ...(recentTaxas || []).map(t => ({
-            id: `tax-${t.id}`,
-            type: 'taxa',
-            title: `Unidade ${t.apartamentos?.numero}`,
-            message: t.status === 'pago' ? 'pagou o condomínio.' : 'tem uma nova taxa pendente.',
-            time: new Date(t.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: t.status === 'pago' ? 'success' : 'warning'
-          })),
-          ...(recentOcorrencias || []).map(o => ({
-            id: `oc-${o.id}`,
-            type: 'ocorrencia',
-            title: `Nova Ocorrência:`,
-            message: `${o.descricao} (Apto ${o.apartamentos?.numero})`,
-            time: new Date(o.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: 'warning'
-          }))
-        ].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 4);
-
-        setActivities(combinedActivities);
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStats();
   }, []);
 
@@ -233,6 +233,7 @@ const Dashboard = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         apartmentId={selectedAptoId}
+        onUpdate={fetchStats}
       />
     </div>
   );

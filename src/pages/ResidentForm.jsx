@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { 
   ArrowLeft, 
@@ -21,71 +21,38 @@ const ResidentForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
-  const [apartments, setApartments] = useState([]);
-  const [originalAptoId, setOriginalAptoId] = useState(null);
   
   const [formData, setFormData] = useState({
     nome: '',
     cpf: '',
     telefone: '',
     email: '',
-    apartamento_id: '',
-    qtd_pessoas: 1,
-    valor_aluguel: 'R$ 0,00',
-    data_entrada: new Date().toISOString().split('T')[0],
-    data_saida: '',
     foto_url: ''
   });
 
   useEffect(() => {
-    const initForm = async () => {
-      await fetchAvailableApartments();
-      if (id) {
-        await fetchResidentDetails(id);
-      }
-    };
-    initForm();
-  }, [id]);
-
-  const fetchAvailableApartments = async () => {
-    const { data, error } = await supabase
-      .from('apartamentos')
-      .select('id, numero, status, valor_aluguel');
-    
-    if (!error) {
-      const sorted = (data || []).sort((a, b) => 
-        a.numero.localeCompare(b.numero, undefined, { numeric: true, sensitivity: 'base' })
-      );
-      setApartments(sorted);
+    if (id) {
+      fetchResidentDetails(id);
     }
-  };
+  }, [id]);
 
   const fetchResidentDetails = async (resId) => {
     try {
       setLoading(true);
       const { data: resident, error: resError } = await supabase
         .from('moradores')
-        .select(`
-          *,
-          apartamentos(*)
-        `)
+        .select('*')
         .eq('id', resId)
         .single();
 
       if (resError) throw resError;
 
       if (resident) {
-        setOriginalAptoId(resident.apartamento_id);
         setFormData({
           nome: resident.nome || '',
           cpf: resident.cpf || '',
           telefone: resident.telefone || '',
           email: resident.email || '',
-          apartamento_id: resident.apartamento_id || '',
-          qtd_pessoas: resident.apartamentos?.qtd_pessoas || 1,
-          valor_aluguel: formatCurrency(resident.apartamentos?.valor_aluguel?.toString() || '0'),
-          data_entrada: resident.apartamentos?.data_entrada || new Date().toISOString().split('T')[0],
-          data_saida: resident.apartamentos?.data_saida || '',
           foto_url: resident.foto_url || ''
         });
       }
@@ -95,15 +62,6 @@ const ResidentForm = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAptoChange = (aptoId) => {
-    const selected = apartments.find(a => a.id === aptoId);
-    setFormData({
-      ...formData, 
-      apartamento_id: aptoId,
-      valor_aluguel: formatCurrency(selected?.valor_aluguel?.toString() || '0')
-    });
   };
 
   const handlePhotoChange = (e) => {
@@ -150,13 +108,12 @@ const ResidentForm = () => {
     setLoading(true);
 
     try {
-      // 1. Save Resident
+      // Save Resident
       const payload = {
         nome: formData.nome,
         cpf: formData.cpf,
         telefone: formData.telefone,
-        email: formData.email,
-        apartamento_id: formData.apartamento_id || null
+        email: formData.email
       };
 
       if (formData.foto_url) {
@@ -203,65 +160,6 @@ const ResidentForm = () => {
       }
 
       if (resError) throw resError;
-
-      // 2. Handle Apartment Status Transitions
-      const aptoDetails = {
-        status: 'ocupado',
-        qtd_pessoas: parseInt(formData.qtd_pessoas),
-        valor_aluguel: parseCurrency(formData.valor_aluguel),
-        data_entrada: formData.data_entrada,
-        data_saida: formData.data_saida || null
-      };
-
-      if (id) {
-        // Edit Mode Apartment Changes
-        if (formData.apartamento_id !== originalAptoId) {
-          // A. If they moved out of their original apartment, vacate it
-          if (originalAptoId) {
-            const { error: vacateError } = await supabase
-              .from('apartamentos')
-              .update({
-                status: 'vazio',
-                qtd_pessoas: null,
-                data_entrada: null,
-                data_saida: null
-              })
-              .eq('id', originalAptoId);
-            
-            if (vacateError) throw vacateError;
-          }
-
-          // B. If they moved into a new apartment, occupy it
-          if (formData.apartamento_id) {
-            const { error: occupyError } = await supabase
-              .from('apartamentos')
-              .update(aptoDetails)
-              .eq('id', formData.apartamento_id);
-            
-            if (occupyError) throw occupyError;
-          }
-        } else {
-          // If the apartment didn't change, just update its specs
-          if (formData.apartamento_id) {
-            const { error: updateAptError } = await supabase
-              .from('apartamentos')
-              .update(aptoDetails)
-              .eq('id', formData.apartamento_id);
-            
-            if (updateAptError) throw updateAptError;
-          }
-        }
-      } else {
-        // Create Mode: Occupy the selected apartment
-        if (formData.apartamento_id) {
-          const { error: aptoError } = await supabase
-            .from('apartamentos')
-            .update(aptoDetails)
-            .eq('id', formData.apartamento_id);
-
-          if (aptoError) throw aptoError;
-        }
-      }
 
       alert(id ? 'Morador atualizado com sucesso!' : 'Morador cadastrado com sucesso!');
       navigate('/moradores');
@@ -359,85 +257,7 @@ const ResidentForm = () => {
           </div>
         </div>
 
-        <div className="form-section">
-          <label>Apartamento</label>
-          <div className="input-wrapper">
-            <Building className="input-icon" size={20} />
-            <select 
-              required
-              value={formData.apartamento_id}
-              onChange={(e) => handleAptoChange(e.target.value)}
-            >
-              <option value="">Selecione uma unidade</option>
-              {apartments.map(apto => {
-                const isOccupied = apto.status === 'ocupado';
-                const isCurrentApto = apto.id === originalAptoId;
-                return (
-                  <option 
-                    key={apto.id} 
-                    value={apto.id} 
-                    disabled={isOccupied && !isCurrentApto}
-                  >
-                    Apto {apto.numero} {isOccupied ? (isCurrentApto ? '(Atual)' : '(Ocupado)') : '(Livre)'}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        </div>
 
-        <div className="form-grid">
-          <div className="form-section">
-            <label>Qtd. de Pessoas</label>
-            <div className="input-wrapper">
-              <User className="input-icon" size={20} />
-              <input 
-                type="number" 
-                min="1"
-                value={formData.qtd_pessoas}
-                onChange={(e) => setFormData({...formData, qtd_pessoas: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div className="form-section">
-            <label>Valor do Aluguel</label>
-            <div className="input-wrapper">
-              <Wallet className="input-icon" size={20} />
-              <input 
-                type="text" 
-                value={formData.valor_aluguel}
-                onChange={(e) => setFormData({...formData, valor_aluguel: formatCurrency(e.target.value)})}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="form-grid">
-          <div className="form-section">
-            <label>Data de Entrada</label>
-            <div className="input-wrapper">
-              <Calendar className="input-icon" size={20} />
-              <input 
-                type="date" 
-                value={formData.data_entrada}
-                onChange={(e) => setFormData({...formData, data_entrada: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div className="form-section">
-            <label>Data de Saída (Opcional)</label>
-            <div className="input-wrapper">
-              <Calendar className="input-icon" size={20} />
-              <input 
-                type="date" 
-                value={formData.data_saida}
-                onChange={(e) => setFormData({...formData, data_saida: e.target.value})}
-              />
-            </div>
-          </div>
-        </div>
 
         <div className="form-actions">
           <button type="submit" className="submit-btn" disabled={loading}>

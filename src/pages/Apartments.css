@@ -60,7 +60,7 @@
 .apartments-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 8px;
 }
 
 .apto-card {
@@ -70,16 +70,21 @@
   padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   box-shadow: var(--shadow-sm);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
+  height: 100%;
 }
 
 .apto-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: var(--primary-light, #cbd5e1);
+}
+
+.detail-label {
+  display: none;
 }
 
 .apto-card-header {
@@ -121,6 +126,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
 }
 
 .apto-detail {
@@ -130,6 +136,11 @@
   color: var(--text-muted);
   font-size: 0.75rem;
   width: 100%;
+  min-width: 0;
+}
+
+.apto-detail strong {
+  white-space: nowrap;
 }
 
 .apto-detail svg {
@@ -144,6 +155,7 @@
   text-overflow: ellipsis;
   max-width: 100%;
   flex: 1;
+  min-width: 0;
 }
 
 .apto-resident-name.muted {
@@ -152,12 +164,12 @@
 }
 
 .apto-detail.status-row {
-  margin-top: 4px;
+  margin-top: auto;
   padding-top: 8px;
   border-top: 1px solid var(--border);
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 4px;
 }
 
@@ -210,12 +222,15 @@
 
 @media (min-width: 640px) {
   .apartments-list {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
   .apto-card {
     padding: 16px;
     gap: 14px;
+  }
+  .detail-label {
+    display: inline;
   }
   .apto-info h3 {
     font-size: 1.05rem;
@@ -235,6 +250,9 @@
     font-size: 0.75rem;
     padding: 3px 6px;
   }
+  .apto-detail.status-row {
+    justify-content: space-between;
+  }
 }
 
 @media (min-width: 768px) {
@@ -245,7 +263,7 @@
 
 @media (min-width: 1024px) {
   .apartments-list {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

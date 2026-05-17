@@ -444,3 +444,230 @@
     opacity: 1;
   }
 }
+
+/* Resident Actions inside Modal */
+.modal-resident-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  width: 100%;
+}
+
+.action-link-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border, #e2e8f0);
+}
+
+.action-link-btn.edit-btn {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #dbeafe;
+}
+
+.action-link-btn.edit-btn:hover {
+  background: #2563eb;
+  color: white;
+}
+
+.action-link-btn.vacate-btn {
+  background: #fff5f5;
+  color: #ef4444;
+  border-color: #fee2e2;
+}
+
+.action-link-btn.vacate-btn:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* Vacate Confirmation Area */
+.vacate-confirm-container {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff5f5;
+  border: 1px solid #fee2e2;
+  width: 100%;
+}
+
+.vacate-confirm-text {
+  font-size: 0.75rem;
+  color: #991b1b;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+}
+
+.vacate-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.vacate-confirm-actions button {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vacate-cancel-btn {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.vacate-cancel-btn:hover {
+  background: #f8fafc;
+}
+
+.vacate-confirm-btn {
+  background: #ef4444;
+  border: 1px solid #ef4444;
+  color: white;
+}
+
+.vacate-confirm-btn:hover {
+  background: #dc2626;
+}
+
+/* Add Resident Button inside dashed box */
+.add-resident-modal-btn {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.add-resident-modal-btn:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Tab Header & Edit Button in Modal */
+.tab-pane-header-modal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.edit-apt-trigger-btn {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #dbeafe;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-apt-trigger-btn:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+/* Apartment Edit Form inside Modal */
+.apt-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+.form-group-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group-modal label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.form-group-modal input,
+.form-group-modal select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.85rem;
+  color: #1e293b;
+  outline: none;
+  background-color: white;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.form-group-modal input:focus,
+.form-group-modal select:focus {
+  border-color: #2563eb;
+}
+
+.form-grid-modal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-actions-modal {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.form-actions-modal button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn-modal {
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+.cancel-btn-modal:hover {
+  background: #f8fafc;
+}
+
+.save-btn-modal {
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  color: white;
+}
+
+.save-btn-modal:hover {
+  background: #1d4ed8;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

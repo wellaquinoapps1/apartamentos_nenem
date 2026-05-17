@@ -148,22 +148,22 @@ const Apartments = () => {
                 </div>
                 <div className="apto-detail">
                   <Wallet size={18} />
-                  <span>Aluguel: <strong>R$ {apto.rent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
+                  <span><span className="detail-label">Aluguel: </span><strong>R$ {apto.rent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
                 </div>
                 <div className="apto-dates">
                   <div className="apto-detail mini">
                     <Calendar size={14} />
-                    <span>Entrada: {apto.entry}</span>
+                    <span><span className="detail-label">Entrada: </span>{apto.entry}</span>
                   </div>
                   {apto.exit !== '--' && (
                     <div className="apto-detail mini">
                       <Calendar size={14} />
-                      <span>Saída: {apto.exit}</span>
+                      <span><span className="detail-label">Saída: </span>{apto.exit}</span>
                     </div>
                   )}
                 </div>
                 <div className="apto-detail status-row">
-                  <span>Financeiro:</span>
+                  <span className="detail-label">Financeiro:</span>
                   <div className={`finance-status ${apto.financial.toLowerCase()}`}>
                     {apto.financial === 'Pago' && <CheckCircle2 size={16} />}
                     {apto.financial === 'Pendente' && <AlertCircle size={16} />}
@@ -184,6 +184,7 @@ const Apartments = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         apartmentId={selectedAptoId}
+        onUpdate={fetchApartments}
       />
     </div>
   );
