@@ -4,6 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 DROP TABLE IF EXISTS comunicados CASCADE;
 DROP TABLE IF EXISTS ocorrencias CASCADE;
 DROP TABLE IF EXISTS taxas CASCADE;
+DROP TABLE IF EXISTS despesas CASCADE;
 DROP TABLE IF EXISTS moradores CASCADE;
 DROP TABLE IF EXISTS apartamentos CASCADE;
 DROP TABLE IF EXISTS admins CASCADE;
@@ -42,6 +43,19 @@ CREATE TABLE taxas (
   valor DECIMAL(10,2) NOT NULL,
   vencimento DATE NOT NULL,
   status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'pago')),
+  data_pagamento TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tabela de Despesas do Condomínio
+CREATE TABLE despesas (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  descricao TEXT NOT NULL,
+  valor DECIMAL(10,2) NOT NULL,
+  vencimento DATE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'pago')),
+  data_pagamento TIMESTAMP WITH TIME ZONE,
+  categoria TEXT DEFAULT 'Outros',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -90,6 +104,7 @@ INSERT INTO apartamentos (numero, status, valor_aluguel) VALUES
 ALTER TABLE apartamentos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE moradores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE taxas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE despesas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ocorrencias ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comunicados ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
@@ -98,13 +113,36 @@ ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all" ON apartamentos FOR ALL USING (true);
 CREATE POLICY "Allow all" ON moradores FOR ALL USING (true);
 CREATE POLICY "Allow all" ON taxas FOR ALL USING (true);
+CREATE POLICY "Allow all" ON despesas FOR ALL USING (true);
 CREATE POLICY "Allow all" ON ocorrencias FOR ALL USING (true);
 CREATE POLICY "Allow all" ON comunicados FOR ALL USING (true);
 CREATE POLICY "Allow all" ON admins FOR ALL USING (true);
 
 -- ============================================================================
--- MIGRAÇÃO (RODAR APENAS ISSO CASO A TABELA MORADORES JÁ EXISTA):
--- Copie e cole no SQL Editor do Supabase para ativar as fotos!
--- 
--- ALTER TABLE moradores ADD COLUMN foto_url TEXT;
+-- MIGRAÇÃO INCREMENTAL (RODE APENAS ESTA PARTE PARA NÃO APAGAR SEUS DADOS ATUAIS!)
+-- Copie e cole as linhas abaixo no SQL Editor do Supabase para atualizar a estrutura:
+--
+
+-- 1. Campos extras dos moradores (local de trabalho e dia de pagamento)
+ALTER TABLE moradores ADD COLUMN IF NOT EXISTS local_trabalho TEXT;
+ALTER TABLE moradores ADD COLUMN IF NOT EXISTS dia_pagamento INTEGER CHECK (dia_pagamento >= 1 AND dia_pagamento <= 31);
+
+-- 2. Data de pagamento nas taxas
+ALTER TABLE taxas ADD COLUMN IF NOT EXISTS data_pagamento TIMESTAMP WITH TIME ZONE;
+
+-- 3. Criação da tabela de despesas (Sem mexer nas outras tabelas!)
+CREATE TABLE IF NOT EXISTS despesas (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  descricao TEXT NOT NULL,
+  valor DECIMAL(10,2) NOT NULL,
+  vencimento DATE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'pago')),
+  data_pagamento TIMESTAMP WITH TIME ZONE,
+  categoria TEXT DEFAULT 'Outros',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 4. Habilitar RLS e criar política de livre acesso na nova tabela despesas
+ALTER TABLE despesas ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all" ON despesas FOR ALL USING (true);
 -- ============================================================================

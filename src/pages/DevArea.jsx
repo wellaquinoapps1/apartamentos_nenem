@@ -206,8 +206,9 @@ const DevArea = () => {
         throw new Error("Nenhum apartamento encontrado na tabela para associar.");
       }
 
-      // 2. Clear existing residents
+      // 2. Clear existing residents and expenses
       await supabase.from('moradores').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('despesas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
       // Realistic resident names and photos
       // Realistic resident names and photos
@@ -274,10 +275,19 @@ const DevArea = () => {
             descricao: 'Mensalidade de Aluguel - Maio',
             valor: rentValue,
             vencimento: '2026-05-10',
-            status: i % 2 === 0 ? 'pago' : 'pendente' // Alternating paid and pending
+            status: i % 2 === 0 ? 'pago' : 'pendente',
+            data_pagamento: i % 2 === 0 ? '2026-05-09T14:30:00Z' : null
           }
         ]);
       }
+
+      // 5. Create some initial expenses
+      await supabase.from('despesas').insert([
+        { descricao: 'Manutenção de Elevador', valor: 450.00, vencimento: '2026-05-05', status: 'pago', data_pagamento: '2026-05-04T10:00:00Z', categoria: 'Manutenção' },
+        { descricao: 'Limpeza de Caixas d\'Água', valor: 380.00, vencimento: '2026-05-12', status: 'pago', data_pagamento: '2026-05-11T16:45:00Z', categoria: 'Limpeza' },
+        { descricao: 'Conta de Energia (Áreas Comuns)', valor: 215.40, vencimento: '2026-05-20', status: 'pendente', data_pagamento: null, categoria: 'Água/Luz' },
+        { descricao: 'Compra de Produtos de Higiene', valor: 85.90, vencimento: '2026-05-25', status: 'pendente', data_pagamento: null, categoria: 'Outros' }
+      ]);
 
       showToast('Dados de teste gerados com sucesso!', 'success');
       fetchStats();
@@ -303,9 +313,12 @@ const DevArea = () => {
       const { error: errRes } = await supabase.from('moradores').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       if (errRes) throw errRes;
 
-      // 2. Delete all financial transactions
+      // 2. Delete all financial transactions (revenues & expenses)
       const { error: errTaxas } = await supabase.from('taxas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       if (errTaxas) throw errTaxas;
+
+      const { error: errDespesas } = await supabase.from('despesas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (errDespesas) throw errDespesas;
 
       // 3. Reset apartments status
       const { data: aptos, error: errAptos } = await supabase.from('apartamentos').select('id');
