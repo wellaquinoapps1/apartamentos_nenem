@@ -9,7 +9,7 @@ const Login = () => {
   const [senha, setSenha] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,7 +45,7 @@ const Login = () => {
           <div className="logo-container">
             <Building2 className="logo-icon" size={32} />
           </div>
-          <h1>CondoAdmin Pro</h1>
+          <h1>Gestão Apartamentos</h1>
           <p>Acesso exclusivo à plataforma de gestão</p>
         </div>
 
@@ -89,8 +89,8 @@ const Login = () => {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={`btn-login ${isLoading ? 'loading' : ''}`}
             disabled={isLoading}
           >

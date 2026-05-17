@@ -327,14 +327,14 @@
   font-style: italic;
 }
 
-.stats-grid {
+.stats-box .stats-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
 
 @media (min-width: 480px) {
-  .stats-grid {
+  .stats-box .stats-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }

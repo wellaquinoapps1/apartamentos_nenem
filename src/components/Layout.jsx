@@ -18,6 +18,7 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const [settings, setSettings] = useState(getSettings());
   const { currentUser, logout } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const handleUpdate = () => setSettings(getSettings());
@@ -70,18 +71,47 @@ const Layout = ({ children }) => {
       </aside>
 
       {/* Mobile Header */}
-      <header className="mobile-header">
-        <button className="menu-btn">
-          <Menu size={24} />
-        </button>
+      <header className="mobile-header" style={{ justifyContent: 'space-between' }}>
         <span className="brand-name">{settings.nomeResidencial}</span>
         <div className="header-actions">
-          <button className="icon-btn" onClick={logout} title="Sair do sistema">
-            <LogOut size={22} />
-          </button>
-          <Link to="/dev" className="profile-avatar" title="Perfil">
-            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.nome || 'User')}&background=${settings.corAvatar}&color=fff`} alt="Profile" />
-          </Link>
+          <div className="avatar-dropdown-container" style={{ position: 'relative' }}>
+            <button 
+              className="profile-avatar" 
+              style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
+              onClick={() => setShowDropdown(!showDropdown)} 
+              title="Menu do Usuário"
+            >
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.nome || 'User')}&background=${settings.corAvatar}&color=fff`} alt="Profile" />
+            </button>
+
+            {showDropdown && (
+              <div className="header-dropdown glass">
+                <div className="dropdown-user-info">
+                  <span className="dropdown-username">{currentUser?.nome}</span>
+                  <span className="dropdown-userrole">{currentUser?.role === 'dev' ? 'Desenvolvedor' : 'Administrador'}</span>
+                </div>
+                <div className="dropdown-divider"></div>
+                {currentUser?.role === 'dev' && (
+                  <Link 
+                    to="/dev" 
+                    className="dropdown-item" 
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    Área Dev
+                  </Link>
+                )}
+                <button 
+                  onClick={() => {
+                    setShowDropdown(false);
+                    logout();
+                  }} 
+                  className="dropdown-item logout-item"
+                >
+                  Sair do Sistema
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
