@@ -416,6 +416,46 @@ const Finance = () => {
     return true;
   });
 
+  const groupedTransactions = useMemo(() => {
+    const groups = {};
+    filteredList.forEach(item => {
+      let groupKey;
+      if (item.status === 'pendente') {
+        groupKey = 'Pendentes';
+      } else {
+        if (item.data_pagamento) {
+          const d = new Date(item.data_pagamento);
+          const day = String(d.getDate()).padStart(2, '0');
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const year = d.getFullYear();
+          groupKey = `Pago em ${day}/${month}/${year}`;
+        } else {
+          groupKey = 'Pagos (sem data)';
+        }
+      }
+      
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(item);
+    });
+    
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      if (a === 'Pendentes') return -1;
+      if (b === 'Pendentes') return 1;
+      if (a === 'Pagos (sem data)') return 1;
+      if (b === 'Pagos (sem data)') return -1;
+      const dateA = a.replace('Pago em ', '').split('/').reverse().join('');
+      const dateB = b.replace('Pago em ', '').split('/').reverse().join('');
+      return dateB.localeCompare(dateA);
+    });
+
+    return sortedKeys.map(key => ({
+      label: key,
+      items: groups[key]
+    }));
+  }, [filteredList]);
+
   return (
     <div className="finance-page">
       {toast && (
@@ -532,94 +572,104 @@ const Finance = () => {
         <div className="transactions-list">
           {loading ? (
             <div className="loading-state">Carregando dados financeiros...</div>
-          ) : filteredList.length === 0 ? (
+          ) : groupedTransactions.length === 0 ? (
             <div className="empty-state">Nenhum registro encontrado.</div>
           ) : (
-            filteredList.map((item) => (
-              <div key={item.id} className={`transaction-item ${item.status}`}>
-                <div className="transaction-item-inner">
-                  {/* Top Status Bar: Clickable if pending, badge if paid */}
-                  <div className="transaction-status-top">
-                    {item.status === 'pendente' ? (
-                      <button 
-                        className="status-pill-btn pendente"
-                        title="Confirmar Pagamento"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setConfirmPaymentModal({ 
-                            isOpen: true, 
-                            item, 
-                            type: activeSection === 'receitas' ? 'receita' : 'despesa' 
-                          });
-                        }}
-                      >
-                        <Check size={14} />
-                        <span>Confirmar Pago</span>
-                      </button>
-                    ) : (
-                      <div className="status-pill paid">
-                        <Check size={14} />
-                        <span>Pago</span>
+            groupedTransactions.map(group => (
+              <div key={group.label} className="transaction-group">
+                <h3 className="group-label-header">{group.label}</h3>
+                <div className="group-items">
+                  {group.items.map((item) => (
+                    <div key={item.id} className={`transaction-item ${item.status}`}>
+                      <div className="transaction-item-inner">
+                        {/* Top Status Bar: Clickable if pending, badge if paid */}
+                        <div className="transaction-status-top">
+                          {item.status === 'pendente' ? (
+                            <button 
+                              className="status-pill-btn pendente"
+                              title="Confirmar Pagamento"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmPaymentModal({ 
+                                  isOpen: true, 
+                                  item, 
+                                  type: activeSection === 'receitas' ? 'receita' : 'despesa' 
+                                });
+                              }}
+                            >
+                              <Check size={14} />
+                              <span>Confirmar Pago</span>
+                            </button>
+                          ) : (
+                            <div className="status-pill paid">
+                              <Check size={14} />
+                              <span>Pago</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Header Row: Unit/Resident Name and Amount */}
+                        <div className="transaction-header">
+                          <div className="apt-info">
+                            <Building size={16} className="apt-icon" />
+                            <span className="unit-name">
+                              {activeSection === 'receitas' ? `Apto ${item.unit} - ${item.morador}` : item.description}
+                            </span>
+                          </div>
+                          <span className="amount">
+                            R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+
+                        {/* Payment Description / Category Row */}
+                        <div className="transaction-description">
+                          <span className="desc-text">
+                            {activeSection === 'receitas' ? item.description : item.categoria}
+                          </span>
+                        </div>
+
+                        {/* Due Date & Paid Date Badges Row */}
+                        <div className="transaction-dates">
+                          <div className="date-badge venc">
+                            <Calendar size={12} />
+                            <span>Venc: {formatDate(item.vencimento)}</span>
+                          </div>
+                          {item.status === 'pago' && item.data_pagamento && (
+                            <div className="date-badge paid">
+                              <Check size={12} />
+                              <span>Pago em: {formatDateTime(item.data_pagamento)}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Actions Row */}
+                        <div className="transaction-actions-row">
+                          <button 
+                            className="btn-item-action edit"
+                            title="Editar Lançamento"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEdit(item);
+                            }}
+                          >
+                            <Pencil size={14} />
+                            <span>Editar</span>
+                          </button>
+                          <button 
+                            className="btn-item-action delete"
+                            title="Excluir Lançamento"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmModal({ isOpen: true, item, type: activeSection === 'receitas' ? 'receita' : 'despesa' });
+                            }}
+                          >
+                            <Trash2 size={14} />
+                            <span>Apagar</span>
+                          </button>
+                        </div>
                       </div>
-                    )}
-                  </div>
-
-                  {/* Header Row: Unit/Resident Name and Amount */}
-                  <div className="transaction-header">
-                    <div className="apt-info">
-                      <Building size={16} className="apt-icon" />
-                      <span className="unit-name">
-                        {activeSection === 'receitas' ? `Apto ${item.unit} - ${item.morador}` : item.description}
-                      </span>
                     </div>
-                    <span className="amount">
-                      R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-
-                  {/* Payment Description / Category Row */}
-                  <div className="transaction-description">
-                    <span className="desc-text">
-                      {activeSection === 'receitas' ? item.description : item.categoria}
-                    </span>
-                  </div>
-
-                  {/* Due Date & Paid Date Badges Row */}
-                  <div className="transaction-dates">
-                    <div className="date-badge venc">
-                      <Calendar size={12} />
-                      <span>Venc: {formatDate(item.vencimento)}</span>
-                    </div>
-                    {item.status === 'pago' && item.data_pagamento && (
-                      <div className="date-badge paid">
-                        <Check size={12} />
-                        <span>Pago em: {formatDateTime(item.data_pagamento)}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bottom Actions Row: Edit & Delete (grouped together on the same line) */}
-                  <div className="transaction-actions-row">
-                    {/* Edit action */}
-                    <button 
-                      className="btn-item-action edit"
-                      title="Editar Lançamento"
-                      onClick={(e) => { e.stopPropagation(); handleOpenEdit(item); }}
-                    >
-                      <Pencil size={14} />
-                      <span>Editar</span>
-                    </button>
-
-                    {/* Delete action */}
-                    <button 
-                      className="btn-item-action delete"
-                      title="Excluir Lançamento"
-                      onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, item, type: activeSection === 'receitas' ? 'receita' : 'despesa' }); }}
-                    >
-                      <Trash2 size={14} />
-                      <span>Apagar</span>
-                    </button>
-                  </div>
+                  ))}
                 </div>
               </div>
             ))
