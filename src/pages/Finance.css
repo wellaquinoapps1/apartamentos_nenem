@@ -27,6 +27,49 @@
   margin-top: 4px;
 }
 
+/* Period Filter */
+.period-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  margin-top: 16px;
+  width: max-content;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.period-filter-container:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.period-icon {
+  color: var(--primary);
+}
+
+.period-input {
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.period-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: 0.2s;
+}
+.period-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 /* Active occupied units indicator */
 .active-apartments-pill {
   display: flex;
@@ -280,13 +323,14 @@
 
 .transaction-item {
   background: var(--surface);
-  padding: 14px;
+  padding: 16px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
-  gap: 12px;
-  align-items: center;
-  transition: all 0.2s ease;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
 .transaction-item.pago {
@@ -298,178 +342,231 @@
 }
 
 .transaction-item:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.item-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.item-icon.income { background: rgba(16, 185, 129, 0.1); color: #059669; }
-.item-icon.expense { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
-
-.item-details {
-  flex: 1;
+.transaction-item-inner {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  overflow: hidden;
+  gap: 10px;
+  width: 100%;
 }
 
-.item-main {
+.transaction-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.unit-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-.amount {
-  font-weight: 800;
-  font-size: 0.95rem;
-  flex-shrink: 0;
-}
-
-.item-sub {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 12px;
 }
 
-@media (min-width: 640px) {
-  .item-sub {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-  }
-}
-
-.type-label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.date-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-  font-size: 0.7rem;
-}
-
-.venc-date {
-  color: var(--text-muted);
-}
-
-.paid-date-badge {
-  background: rgba(16, 185, 129, 0.1);
-  color: #047857;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-}
-
-/* Quick Confirm Action Button */
-.btn-confirm-payment {
-  background: #10b981;
-  color: white;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
-  flex-shrink: 0;
-}
-
-.btn-confirm-payment:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-}
-
-.paid-check-icon {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-/* Item Actions Panel */
-.item-actions-wrapper {
+.apt-info {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--text-main);
+  flex: 1;
+  min-width: 0;
+}
+
+.apt-info .apt-icon {
+  color: var(--primary);
   flex-shrink: 0;
 }
 
-.btn-item-action {
+.transaction-item .unit-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: var(--text-main);
+  white-space: normal;
+  word-break: break-word;
+}
+
+.transaction-item .amount {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.transaction-description {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding-left: 24px;
+}
+
+.transaction-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-left: 24px;
+}
+
+.date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.date-badge.venc {
+  background: rgba(241, 245, 249, 0.8);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.date-badge.paid {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.transaction-status-top {
+  display: flex;
+  margin-bottom: 4px;
+}
+
+.status-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.status-pill-btn.pendente {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #f59e0b;
+}
+
+.status-pill-btn.pendente:hover {
+  background: #fde68a;
+  transform: translateY(-1px);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.status-pill.paid {
+  background: #dcfce7;
+  color: #16a34a;
+  border-color: #22c55e;
+}
+
+.transaction-actions-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.transaction-item .btn-item-action {
+  flex: 1; /* Make the buttons expand and occupy the full width of the row equally */
   background: rgba(0, 0, 0, 0.02);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  height: 36px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
-.btn-item-action:hover {
+.transaction-item .btn-item-action:hover {
   transform: translateY(-1px);
 }
 
-.btn-item-action.edit {
+.transaction-item .btn-item-action.edit {
   color: #2563eb;
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(37, 99, 235, 0.06);
   border-color: rgba(37, 99, 235, 0.15);
 }
 
-.btn-item-action.edit:hover {
+.transaction-item .btn-item-action.edit:hover {
   background: #2563eb;
   color: white;
   border-color: #2563eb;
   box-shadow: 0 3px 8px rgba(37, 99, 235, 0.2);
 }
 
-.btn-item-action.delete {
+.transaction-item .btn-item-action.delete {
   color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
+  background: rgba(239, 68, 68, 0.06);
   border-color: rgba(239, 68, 68, 0.15);
 }
 
-.btn-item-action.delete:hover {
+.transaction-item .btn-item-action.delete:hover {
   background: #ef4444;
   color: white;
   border-color: #ef4444;
   box-shadow: 0 3px 8px rgba(239, 68, 68, 0.2);
+}
+
+.btn-confirm-payment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #10b981;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+  height: 32px;
+}
+
+.btn-confirm-payment:hover {
+  transform: translateY(-1px);
+  background: #059669;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
+.paid-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  height: 32px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 /* Floating Action Button (FAB) */

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   TrendingUp, 
@@ -26,21 +26,44 @@ const Finance = () => {
   const [activeSection, setActiveSection] = useState('receitas'); // 'receitas' or 'despesas'
   const [filter, setFilter] = useState('Todos');
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState(new Date().toISOString().substring(0, 7)); // e.g. '2026-05'
 
   // Lists
   const [revenues, setRevenues] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [apartments, setApartments] = useState([]);
 
-  // Stats
-  const [stats, setStats] = useState({
-    totalRevenues: 0,
-    totalExpenses: 0,
-    netBalance: 0,
-    delinquencyRate: 0,
-    occupiedApts: 0,
-    totalApts: 0
-  });
+  // Computed Period Data & Stats
+  const periodRevenues = useMemo(() => {
+    if (!period) return revenues;
+    return revenues.filter(r => r.vencimento && r.vencimento.startsWith(period));
+  }, [revenues, period]);
+
+  const periodExpenses = useMemo(() => {
+    if (!period) return expenses;
+    return expenses.filter(e => e.vencimento && e.vencimento.startsWith(period));
+  }, [expenses, period]);
+
+  const stats = useMemo(() => {
+    const totalRevenues = periodRevenues
+      .filter(t => t.status === 'pago')
+      .reduce((sum, current) => sum + current.amount, 0);
+
+    const totalExpenses = periodExpenses
+      .filter(d => d.status === 'pago')
+      .reduce((sum, current) => sum + current.amount, 0);
+
+    const netBalance = totalRevenues - totalExpenses;
+
+    const totalBilled = periodRevenues.length;
+    const totalDelinquent = periodRevenues.filter(t => t.status === 'pendente').length;
+    const delinquencyRate = totalBilled > 0 ? (totalDelinquent / totalBilled) * 100 : 0;
+
+    const occupiedApts = apartments.filter(a => a.status === 'ocupado').length;
+    const totalApts = apartments.length;
+
+    return { totalRevenues, totalExpenses, netBalance, delinquencyRate, occupiedApts, totalApts };
+  }, [periodRevenues, periodExpenses, apartments]);
 
   // Modal States
   const [showRevenueModal, setShowRevenueModal] = useState(false);
@@ -204,29 +227,7 @@ const Finance = () => {
       }
       setExpenses(formattedExpenses);
 
-      // 4. Calculate Financial Metrics
-      const totalRevenues = formattedRevenues
-        .filter(t => t.status === 'pago')
-        .reduce((sum, current) => sum + current.amount, 0);
-
-      const totalExpenses = formattedExpenses
-        .filter(d => d.status === 'pago')
-        .reduce((sum, current) => sum + current.amount, 0);
-
-      const netBalance = totalRevenues - totalExpenses;
-
-      const totalBilled = formattedRevenues.length;
-      const totalDelinquent = formattedRevenues.filter(t => t.status === 'pendente').length;
-      const delinquencyRate = totalBilled > 0 ? (totalDelinquent / totalBilled) * 100 : 0;
-
-      setStats({
-        totalRevenues,
-        totalExpenses,
-        netBalance,
-        delinquencyRate,
-        occupiedApts,
-        totalApts
-      });
+      // 4. Metrics are now calculated automatically via useMemo based on selected period.
 
     } catch (error) {
       console.error('Error fetching finance data:', error);
@@ -406,7 +407,7 @@ const Finance = () => {
     });
   };
 
-  const activeList = activeSection === 'receitas' ? revenues : expenses;
+  const activeList = activeSection === 'receitas' ? periodRevenues : periodExpenses;
 
   const filteredList = activeList.filter(item => {
     if (filter === 'Todos') return true;
@@ -434,6 +435,16 @@ const Finance = () => {
             <span className="dot animate-pulse"></span>
             <span>{stats.occupiedApts} de {stats.totalApts} Apts Ocupados (Gerando Receita)</span>
           </div>
+        </div>
+
+        <div className="period-filter-container">
+          <Calendar size={18} className="period-icon" />
+          <input 
+            type="month" 
+            className="period-input"
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+          />
         </div>
       </header>
 
@@ -526,73 +537,89 @@ const Finance = () => {
           ) : (
             filteredList.map((item) => (
               <div key={item.id} className={`transaction-item ${item.status}`}>
-                <div className={`item-icon ${activeSection === 'receitas' ? 'income' : 'expense'}`}>
-                  {activeSection === 'receitas' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
-                </div>
-                <div className="item-details">
-                  <div className="item-main">
-                    <span className="unit-name">
-                      {activeSection === 'receitas' ? `Apto ${item.unit} - ${item.morador}` : item.description}
-                    </span>
+                <div className="transaction-item-inner">
+                  {/* Top Status Bar: Clickable if pending, badge if paid */}
+                  <div className="transaction-status-top">
+                    {item.status === 'pendente' ? (
+                      <button 
+                        className="status-pill-btn pendente"
+                        title="Confirmar Pagamento"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmPaymentModal({ 
+                            isOpen: true, 
+                            item, 
+                            type: activeSection === 'receitas' ? 'receita' : 'despesa' 
+                          });
+                        }}
+                      >
+                        <Check size={14} />
+                        <span>Confirmar Pago</span>
+                      </button>
+                    ) : (
+                      <div className="status-pill paid">
+                        <Check size={14} />
+                        <span>Pago</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Header Row: Unit/Resident Name and Amount */}
+                  <div className="transaction-header">
+                    <div className="apt-info">
+                      <Building size={16} className="apt-icon" />
+                      <span className="unit-name">
+                        {activeSection === 'receitas' ? `Apto ${item.unit} - ${item.morador}` : item.description}
+                      </span>
+                    </div>
                     <span className="amount">
                       R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <div className="item-sub">
-                    <span className="type-label">
+
+                  {/* Payment Description / Category Row */}
+                  <div className="transaction-description">
+                    <span className="desc-text">
                       {activeSection === 'receitas' ? item.description : item.categoria}
                     </span>
-                    <div className="date-info">
-                      <span className="venc-date">Venc: {formatDate(item.vencimento)}</span>
-                      {item.status === 'pago' && item.data_pagamento && (
-                        <span className="paid-date-badge">
-                          Pago em: {formatDateTime(item.data_pagamento)}
-                        </span>
-                      )}
-                    </div>
                   </div>
-                </div>
 
-                <div className="item-actions-wrapper">
-                  {/* Edit action */}
-                  <button 
-                    className="btn-item-action edit"
-                    title="Editar Lançamento"
-                    onClick={(e) => { e.stopPropagation(); handleOpenEdit(item); }}
-                  >
-                    <Pencil size={15} />
-                  </button>
-
-                  {/* Delete action */}
-                  <button 
-                    className="btn-item-action delete"
-                    title="Excluir Lançamento"
-                    onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, item, type: activeSection === 'receitas' ? 'receita' : 'despesa' }); }}
-                  >
-                    <Trash2 size={15} />
-                  </button>
-
-                  {/* Quick Toggle Action to Confirm Payment */}
-                  {item.status === 'pendente' ? (
-                    <button 
-                      className="btn-confirm-payment"
-                      title="Confirmar Pagamento"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setConfirmPaymentModal({ 
-                          isOpen: true, 
-                          item, 
-                          type: activeSection === 'receitas' ? 'receita' : 'despesa' 
-                        });
-                      }}
-                    >
-                      <Check size={18} />
-                    </button>
-                  ) : (
-                    <div className="paid-check-icon">
-                      <Check size={18} />
+                  {/* Due Date & Paid Date Badges Row */}
+                  <div className="transaction-dates">
+                    <div className="date-badge venc">
+                      <Calendar size={12} />
+                      <span>Venc: {formatDate(item.vencimento)}</span>
                     </div>
-                  )}
+                    {item.status === 'pago' && item.data_pagamento && (
+                      <div className="date-badge paid">
+                        <Check size={12} />
+                        <span>Pago em: {formatDateTime(item.data_pagamento)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bottom Actions Row: Edit & Delete (grouped together on the same line) */}
+                  <div className="transaction-actions-row">
+                    {/* Edit action */}
+                    <button 
+                      className="btn-item-action edit"
+                      title="Editar Lançamento"
+                      onClick={(e) => { e.stopPropagation(); handleOpenEdit(item); }}
+                    >
+                      <Pencil size={14} />
+                      <span>Editar</span>
+                    </button>
+
+                    {/* Delete action */}
+                    <button 
+                      className="btn-item-action delete"
+                      title="Excluir Lançamento"
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, item, type: activeSection === 'receitas' ? 'receita' : 'despesa' }); }}
+                    >
+                      <Trash2 size={14} />
+                      <span>Apagar</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
