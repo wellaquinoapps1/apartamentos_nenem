@@ -210,11 +210,12 @@ const DevArea = () => {
       await supabase.from('moradores').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
       // Realistic resident names and photos
+      // Realistic resident names and photos
       const mockResidents = [
-        { nome: 'Julio Cesar', cpf: '123.456.789-00', telefone: '(11) 98765-4321', email: 'julio@email.com' },
-        { nome: 'Sarinha De Oliveira Santos', cpf: '987.654.321-11', telefone: '(11) 91234-5678', email: 'sarinha@email.com' },
-        { nome: 'Carlos Eduardo', cpf: '456.789.123-22', telefone: '(11) 97777-8888', email: 'carlos@email.com' },
-        { nome: 'Beatriz Costa', cpf: '789.123.456-33', telefone: '(11) 96666-5555', email: 'beatriz@email.com' }
+        { nome: 'Julio Cesar', cpf: '123.456.789-00', telefone: '(11) 98765-4321', email: 'julio@email.com', local_trabalho: 'Advocacia Lima', dia_pagamento: 5 },
+        { nome: 'Sarinha De Oliveira Santos', cpf: '987.654.321-11', telefone: '(11) 91234-5678', email: 'sarinha@email.com', local_trabalho: 'Autônoma', dia_pagamento: 10 },
+        { nome: 'Carlos Eduardo', cpf: '456.789.123-22', telefone: '(11) 97777-8888', email: 'carlos@email.com', local_trabalho: 'SoftTech Corp', dia_pagamento: 15 },
+        { nome: 'Beatriz Costa', cpf: '789.123.456-33', telefone: '(11) 96666-5555', email: 'beatriz@email.com', local_trabalho: 'Estudante', dia_pagamento: 20 }
       ];
 
       // Some base64 sample avatars to make it gorgeous
@@ -259,7 +260,9 @@ const DevArea = () => {
           telefone: res.telefone,
           email: res.email,
           apartamento_id: apto.id,
-          foto_url: base64Avatars[i]
+          foto_url: base64Avatars[i],
+          local_trabalho: res.local_trabalho,
+          dia_pagamento: res.dia_pagamento
         });
 
         if (errRes) throw errRes;

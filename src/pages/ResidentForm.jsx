@@ -27,7 +27,9 @@ const ResidentForm = () => {
     cpf: '',
     telefone: '',
     email: '',
-    foto_url: ''
+    foto_url: '',
+    local_trabalho: '',
+    dia_pagamento: ''
   });
 
   useEffect(() => {
@@ -53,7 +55,9 @@ const ResidentForm = () => {
           cpf: resident.cpf || '',
           telefone: resident.telefone || '',
           email: resident.email || '',
-          foto_url: resident.foto_url || ''
+          foto_url: resident.foto_url || '',
+          local_trabalho: resident.local_trabalho || '',
+          dia_pagamento: resident.dia_pagamento || ''
         });
       }
     } catch (err) {
@@ -113,7 +117,9 @@ const ResidentForm = () => {
         nome: formData.nome,
         cpf: formData.cpf,
         telefone: formData.telefone,
-        email: formData.email
+        email: formData.email,
+        local_trabalho: formData.local_trabalho || null,
+        dia_pagamento: formData.dia_pagamento ? parseInt(formData.dia_pagamento) : null
       };
 
       if (formData.foto_url) {
@@ -254,6 +260,41 @@ const ResidentForm = () => {
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
             />
+          </div>
+        </div>
+
+        <div className="form-grid">
+          <div className="form-section">
+            <label>Local de Trabalho</label>
+            <div className="input-wrapper">
+              <Building className="input-icon" size={20} />
+              <input 
+                type="text" 
+                placeholder="Ex: Google Inc." 
+                value={formData.local_trabalho}
+                onChange={(e) => setFormData({...formData, local_trabalho: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-section">
+            <label>Dia de Vencimento Mensal</label>
+            <div className="input-wrapper">
+              <Calendar className="input-icon" size={20} />
+              <input 
+                type="number" 
+                min="1"
+                max="31"
+                placeholder="Ex: 10" 
+                value={formData.dia_pagamento}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || (parseInt(val) >= 1 && parseInt(val) <= 31)) {
+                    setFormData({...formData, dia_pagamento: val});
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
 

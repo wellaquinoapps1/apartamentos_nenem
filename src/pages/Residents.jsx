@@ -20,6 +20,7 @@ const Residents = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, name: '', apto_id: null });
+  const [detailModal, setDetailModal] = useState({ isOpen: false, resident: null });
 
   useEffect(() => {
     fetchResidents();
@@ -41,11 +42,15 @@ const Residents = () => {
       const formattedData = data.map(res => ({
         id: res.id,
         name: res.nome,
+        cpf: res.cpf || '--',
         apto: res.apartamentos?.numero || 'S/N',
         apto_id: res.apartamentos?.id || null,
         phone: res.telefone || '--',
-        status: res.cpf ? 'ativo' : 'pendente', // Business logic: if CPF exists, it's active
-        foto_url: res.foto_url
+        email: res.email || '--',
+        status: res.cpf ? 'ativo' : 'pendente',
+        foto_url: res.foto_url,
+        local_trabalho: res.local_trabalho || '--',
+        dia_pagamento: res.dia_pagamento || null
       }));
 
       setResidents(formattedData);
@@ -149,7 +154,11 @@ const Residents = () => {
           <div className="empty-state">Nenhum morador encontrado.</div>
         ) : (
           filteredResidents.map((res) => (
-            <div key={res.id} className="resident-item">
+            <div 
+              key={res.id} 
+              className="resident-item clickable"
+              onClick={() => setDetailModal({ isOpen: true, resident: res })}
+            >
               <div className="resident-avatar">
                 {res.foto_url ? (
                   <img src={res.foto_url} alt={res.name} className="avatar-img" />
@@ -223,6 +232,85 @@ const Residents = () => {
                 disabled={loading}
               >
                 {loading ? 'Excluindo...' : 'Sim, Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {detailModal.isOpen && detailModal.resident && (
+        <div className="modal-overlay" onClick={() => setDetailModal({ isOpen: false, resident: null })}>
+          <div className="modal-content profile-detail-modal" onClick={e => e.stopPropagation()}>
+            <div className="profile-detail-header">
+              <div className="profile-avatar-large">
+                {detailModal.resident.foto_url ? (
+                  <img src={detailModal.resident.foto_url} alt={detailModal.resident.name} />
+                ) : (
+                  <User size={48} />
+                )}
+              </div>
+              <div className="profile-header-info">
+                <h2>{detailModal.resident.name}</h2>
+                <div className="badge-row">
+                  <span className="res-apto-badge">Apto {detailModal.resident.apto}</span>
+                  <span className={`res-status-badge ${detailModal.resident.status}`}>
+                    {detailModal.resident.status === 'ativo' ? 'Ativo' : 'Pendente'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-body profile-detail-body">
+              <div className="detail-section">
+                <h3>Informações Pessoais</h3>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <span className="detail-label">CPF</span>
+                    <span className="detail-value">{detailModal.resident.cpf}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Telefone</span>
+                    <span className="detail-value">{detailModal.resident.phone}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">E-mail</span>
+                    <span className="detail-value">{detailModal.resident.email}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detail-section">
+                <h3>Trabalho e Vencimento</h3>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <span className="detail-label">Local de Trabalho</span>
+                    <span className="detail-value">{detailModal.resident.local_trabalho}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Dia de Pagamento</span>
+                    <span className="detail-value">
+                      {detailModal.resident.dia_pagamento 
+                        ? `Todo dia ${detailModal.resident.dia_pagamento}` 
+                        : '--'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <Link 
+                to={`/moradores/editar/${detailModal.resident.id}`}
+                className="btn-edit-shortcut"
+              >
+                <Pencil size={18} />
+                <span>Editar Cadastro</span>
+              </Link>
+              <button 
+                className="btn-close-detail" 
+                onClick={() => setDetailModal({ isOpen: false, resident: null })}
+              >
+                Fechar
               </button>
             </div>
           </div>

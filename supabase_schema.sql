@@ -29,6 +29,8 @@ CREATE TABLE moradores (
   email TEXT,
   apartamento_id UUID REFERENCES apartamentos(id) ON DELETE SET NULL,
   foto_url TEXT, -- Coluna adicionada para armazenar a foto do perfil em Base64
+  local_trabalho TEXT,
+  dia_pagamento INTEGER CHECK (dia_pagamento >= 1 AND dia_pagamento <= 31),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
