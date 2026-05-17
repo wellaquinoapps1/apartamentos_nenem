@@ -19,7 +19,9 @@ const Dashboard = () => {
     apartamentos: 0,
     moradores: 0,
     pendencias: 0,
-    ocorrencias: 0
+    ocorrencias: 0,
+    aptosOcupados: 0,
+    aptosLivres: 0
   });
   const [activities, setActivities] = useState([]);
   const [apartments, setApartments] = useState([]);
@@ -35,19 +37,25 @@ const Dashboard = () => {
       const { count: pendencias } = await supabase.from('taxas').select('*', { count: 'exact', head: true }).eq('status', 'pendente');
       const { count: ocorrencias } = await supabase.from('ocorrencias').select('*', { count: 'exact', head: true }).eq('status', 'aberta');
 
-      setStats({
-        apartamentos: aptos || 0,
-        moradores: moradores || 0,
-        pendencias: pendencias || 0,
-        ocorrencias: ocorrencias || 0
-      });
-
       // Fetch apartments with residents
       const { data: aptosData } = await supabase
         .from('apartamentos')
         .select('*, moradores(nome, foto_url)');
 
-      const sortedAptos = (aptosData || []).sort((a, b) =>
+      const aptosList = aptosData || [];
+      const aptosOcupados = aptosList.filter(a => a.status === 'ocupado').length;
+      const aptosLivres = aptosList.filter(a => a.status === 'vazio' || a.status !== 'ocupado').length;
+
+      setStats({
+        apartamentos: aptos || aptosList.length || 0,
+        moradores: moradores || 0,
+        pendencias: pendencias || 0,
+        ocorrencias: ocorrencias || 0,
+        aptosOcupados,
+        aptosLivres
+      });
+
+      const sortedAptos = aptosList.sort((a, b) =>
         a.numero.localeCompare(b.numero, undefined, { numeric: true, sensitivity: 'base' })
       );
       setApartments(sortedAptos);
@@ -126,6 +134,14 @@ const Dashboard = () => {
           <div className="stat-content">
             <span className="stat-value">{stats.apartamentos}</span>
             <span className="stat-label">APARTAMENTOS</span>
+            <div className="apt-status-badges" style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+              <span style={{ fontSize: '0.65rem', background: '#ecfdf5', color: '#10b981', padding: '2px 6px', borderRadius: '4px', fontWeight: '700' }}>
+                {stats.aptosOcupados} Ocupados
+              </span>
+              <span style={{ fontSize: '0.65rem', background: '#f1f5f9', color: '#64748b', padding: '2px 6px', borderRadius: '4px', fontWeight: '700' }}>
+                {stats.aptosLivres} Livres
+              </span>
+            </div>
           </div>
         </div>
 
