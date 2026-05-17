@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
         <div className="sidebar-header">
           <div className="logo">
             <Building2 className="logo-icon" />
-            <span>CondoAdmin Pro</span>
+            <span>Moradores</span>
           </div>
         </div>
         <nav className="sidebar-nav">
@@ -51,7 +51,7 @@ const Layout = ({ children }) => {
         <button className="menu-btn">
           <Menu size={24} />
         </button>
-        <span className="brand-name">CondoAdmin Pro</span>
+        <span className="brand-name">Moradores</span>
         <div className="header-actions">
           <button className="icon-btn">
             <Bell size={24} />

@@ -15,6 +15,7 @@ function App() {
           <Route path="/apartamentos" element={<Apartments />} />
           <Route path="/moradores" element={<Residents />} />
           <Route path="/moradores/novo" element={<ResidentForm />} />
+          <Route path="/moradores/editar/:id" element={<ResidentForm />} />
           <Route path="/financeiro" element={<Finance />} />
           <Route path="/ocorrencias" element={<div>Ocorrências</div>} />
         </Routes>

@@ -27,6 +27,7 @@ CREATE TABLE moradores (
   telefone TEXT,
   email TEXT,
   apartamento_id UUID REFERENCES apartamentos(id) ON DELETE SET NULL,
+  foto_url TEXT, -- Coluna adicionada para armazenar a foto do perfil em Base64
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -82,3 +83,10 @@ CREATE POLICY "Allow all" ON moradores FOR ALL USING (true);
 CREATE POLICY "Allow all" ON taxas FOR ALL USING (true);
 CREATE POLICY "Allow all" ON ocorrencias FOR ALL USING (true);
 CREATE POLICY "Allow all" ON comunicados FOR ALL USING (true);
+
+-- ============================================================================
+-- MIGRAÇÃO (RODAR APENAS ISSO CASO A TABELA MORADORES JÁ EXISTA):
+-- Copie e cole no SQL Editor do Supabase para ativar as fotos!
+-- 
+-- ALTER TABLE moradores ADD COLUMN foto_url TEXT;
+-- ============================================================================

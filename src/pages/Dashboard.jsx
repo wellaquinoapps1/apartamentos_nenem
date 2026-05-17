@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { 
-  Building2, 
-  Users, 
-  Wallet, 
-  AlertCircle, 
-  Megaphone, 
-  UserPlus, 
-  FileText,
-  ChevronRight,
+import {
+  Building2,
+  Users,
+  Wallet,
+  AlertCircle,
   MoreVertical,
   CheckCircle2,
   User
 } from 'lucide-react';
 import './Dashboard.css';
+import ApartmentDetailsModal from '../components/ApartmentDetailsModal';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -26,6 +23,8 @@ const Dashboard = () => {
   const [activities, setActivities] = useState([]);
   const [apartments, setApartments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAptoId, setSelectedAptoId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -45,9 +44,9 @@ const Dashboard = () => {
         // Fetch apartments with residents
         const { data: aptosData } = await supabase
           .from('apartamentos')
-          .select('*, moradores(nome)');
+          .select('*, moradores(nome, foto_url)');
 
-        const sortedAptos = (aptosData || []).sort((a, b) => 
+        const sortedAptos = (aptosData || []).sort((a, b) =>
           a.numero.localeCompare(b.numero, undefined, { numeric: true, sensitivity: 'base' })
         );
         setApartments(sortedAptos);
@@ -146,43 +145,28 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <section className="dashboard-section">
-        <h2 className="section-title">Ações Rápidas</h2>
-        <div className="quick-actions">
-          <button className="action-btn">
-            <div className="action-icon blue">
-              <Megaphone size={24} />
-            </div>
-            <span>Novo Comunicado</span>
-          </button>
-          <Link to="/moradores/novo" className="action-btn">
-            <div className="action-icon purple">
-              <UserPlus size={24} />
-            </div>
-            <span>Add Morador</span>
-          </Link>
-          <button className="action-btn">
-            <div className="action-icon navy">
-              <FileText size={24} />
-            </div>
-            <span>Gerar Boleto</span>
-          </button>
-        </div>
-      </section>
 
       <section className="dashboard-section">
         <div className="section-header">
-          <h2 className="section-title">Ocupação das Unidades</h2>
+          <h2 className="section-title">Ocupação dos Apartamentos</h2>
           <Link to="/apartamentos" className="text-link">Ver Todos</Link>
         </div>
         <div className="apartments-grid">
           {apartments.map((apto) => {
             const hasResident = apto.moradores && apto.moradores.length > 0;
             const residentName = hasResident ? apto.moradores[0].nome : null;
+            const residentFoto = hasResident ? apto.moradores[0].foto_url : null;
             const isOccupied = apto.status === 'ocupado';
 
             return (
-              <div key={apto.id} className="apt-card-dashboard">
+              <div
+                key={apto.id}
+                className="apt-card-dashboard"
+                onClick={() => {
+                  setSelectedAptoId(apto.id);
+                  setIsModalOpen(true);
+                }}
+              >
                 <div className="apt-card-header">
                   <span className="apt-number">Apto {apto.numero}</span>
                   <span className={`apt-badge ${isOccupied ? 'occupied' : 'vacant'}`}>
@@ -190,7 +174,11 @@ const Dashboard = () => {
                   </span>
                 </div>
                 <div className="apt-card-body">
-                  <User size={14} className={hasResident ? 'icon-active' : 'icon-muted'} />
+                  {residentFoto ? (
+                    <img src={residentFoto} alt={residentName} className="apt-resident-thumb" />
+                  ) : (
+                    <User size={14} className={hasResident ? 'icon-active' : 'icon-muted'} />
+                  )}
                   <span className={`apt-resident ${hasResident ? 'has-resident' : 'no-resident'}`} title={residentName || 'Sem morador'}>
                     {hasResident ? residentName : 'Sem morador'}
                   </span>
@@ -208,7 +196,7 @@ const Dashboard = () => {
             <MoreVertical size={20} />
           </button>
         </div>
-        
+
         <div className="activity-list card">
           {activities.length === 0 ? (
             <div className="empty-state-padding">Nenhuma atividade recente.</div>
@@ -240,6 +228,12 @@ const Dashboard = () => {
           )}
         </div>
       </section>
+
+      <ApartmentDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        apartmentId={selectedAptoId}
+      />
     </div>
   );
 };

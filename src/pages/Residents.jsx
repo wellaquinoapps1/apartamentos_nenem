@@ -5,11 +5,12 @@ import {
   Search, 
   UserPlus, 
   User, 
-  ChevronRight,
   Phone,
   Plus,
   CheckCircle,
-  Clock
+  Clock,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import './Residents.css';
 
@@ -18,6 +19,7 @@ const Residents = () => {
   const [stats, setStats] = useState({ ativos: 0, pendentes: 0 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, name: '', apto_id: null });
 
   useEffect(() => {
     fetchResidents();
@@ -30,7 +32,7 @@ const Residents = () => {
         .from('moradores')
         .select(`
           *,
-          apartamentos(numero)
+          apartamentos(id, numero)
         `)
         .order('nome', { ascending: true });
 
@@ -40,8 +42,10 @@ const Residents = () => {
         id: res.id,
         name: res.nome,
         apto: res.apartamentos?.numero || 'S/N',
+        apto_id: res.apartamentos?.id || null,
         phone: res.telefone || '--',
-        status: res.cpf ? 'ativo' : 'pendente' // Business logic: if CPF exists, it's active
+        status: res.cpf ? 'ativo' : 'pendente', // Business logic: if CPF exists, it's active
+        foto_url: res.foto_url
       }));
 
       setResidents(formattedData);
@@ -53,6 +57,42 @@ const Residents = () => {
     } catch (error) {
       console.error('Error fetching residents:', error);
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id, apartamentoId) => {
+    try {
+      setLoading(true);
+      // 1. Delete resident
+      const { error: deleteError } = await supabase
+        .from('moradores')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) throw deleteError;
+
+      // 2. Set the apartment status back to vacant
+      if (apartamentoId) {
+        const { error: aptError } = await supabase
+          .from('apartamentos')
+          .update({
+            status: 'vazio',
+            qtd_pessoas: null,
+            data_entrada: null,
+            data_saida: null
+          })
+          .eq('id', apartamentoId);
+
+        if (aptError) throw aptError;
+      }
+
+      setDeleteModal({ isOpen: false, id: null, name: '', apto_id: null });
+      alert('Morador excluído com sucesso!');
+      await fetchResidents();
+    } catch (error) {
+      console.error('Error deleting resident:', error);
+      alert('Erro ao excluir morador: ' + error.message);
       setLoading(false);
     }
   };
@@ -111,7 +151,11 @@ const Residents = () => {
           filteredResidents.map((res) => (
             <div key={res.id} className="resident-item">
               <div className="resident-avatar">
-                <User size={24} />
+                {res.foto_url ? (
+                  <img src={res.foto_url} alt={res.name} className="avatar-img" />
+                ) : (
+                  <User size={24} />
+                )}
               </div>
               <div className="resident-info">
                 <div className="name-row">
@@ -126,7 +170,26 @@ const Residents = () => {
               {res.status === 'pendente' && (
                 <span className="status-badge-res">PENDENTE</span>
               )}
-              <ChevronRight className="arrow-icon" size={20} />
+              <div className="resident-actions">
+                <Link 
+                  to={`/moradores/editar/${res.id}`} 
+                  className="action-btn edit" 
+                  title="Editar"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Pencil size={16} />
+                </Link>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteModal({ isOpen: true, id: res.id, name: res.name, apto_id: res.apto_id });
+                  }} 
+                  className="action-btn delete" 
+                  title="Excluir"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           ))
         )}
@@ -135,6 +198,36 @@ const Residents = () => {
       <Link to="/moradores/novo" className="fab">
         <Plus size={24} />
       </Link>
+
+      {deleteModal.isOpen && (
+        <div className="modal-overlay" onClick={() => setDeleteModal({ isOpen: false, id: null, name: '', apto_id: null })}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Confirmar Exclusão</h2>
+            </div>
+            <div className="modal-body">
+              <p>Tem certeza que deseja excluir o morador <strong>{deleteModal.name}</strong>?</p>
+              <p className="modal-warning">Esta ação não poderá ser desfeita e o apartamento ficará vazio.</p>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="btn-cancel" 
+                onClick={() => setDeleteModal({ isOpen: false, id: null, name: '', apto_id: null })}
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn-danger" 
+                onClick={() => handleDelete(deleteModal.id, deleteModal.apto_id)}
+                disabled={loading}
+              >
+                {loading ? 'Excluindo...' : 'Sim, Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

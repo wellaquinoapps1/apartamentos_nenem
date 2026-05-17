@@ -58,8 +58,8 @@
 }
 
 .apartments-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
@@ -67,92 +67,125 @@
   background: var(--surface);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  padding: 20px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.apto-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-light, #cbd5e1);
 }
 
 .apto-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding-bottom: 12px;
+  align-items: center;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
+  gap: 4px;
 }
 
 .apto-info h3 {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   margin-bottom: 2px;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .apto-block {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
-.status-badge {
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.7rem;
+.apto-status-badge {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: inline-block;
 }
 
-.status-badge.ocupado { background: #dcfce7; color: #166534; }
-.status-badge.vago { background: #fef3c7; color: #92400e; }
+.apto-status-badge.ocupado { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+.apto-status-badge.vago { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+.apto-status-badge.vazio { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
 
 .apto-card-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .apto-detail {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  width: 100%;
 }
 
-.apto-detail .muted {
+.apto-detail svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.apto-resident-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  flex: 1;
+}
+
+.apto-resident-name.muted {
   font-style: italic;
   opacity: 0.7;
 }
 
 .apto-detail.status-row {
-  margin-top: 8px;
-  padding-top: 12px;
+  margin-top: 4px;
+  padding-top: 8px;
   border-top: 1px solid var(--border);
   justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .apto-dates {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 8px 0;
+  gap: 2px;
+  margin: 4px 0;
 }
 
 .apto-detail.mini {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.7rem;
 }
 
 .apto-detail.mini svg {
   color: #94a3b8;
+  width: 12px;
+  height: 12px;
 }
 
 .finance-status {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 4px;
 }
 
 .finance-status.pago { color: var(--success); }
@@ -175,6 +208,35 @@
   z-index: 110;
 }
 
+@media (min-width: 640px) {
+  .apartments-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .apto-card {
+    padding: 16px;
+    gap: 14px;
+  }
+  .apto-info h3 {
+    font-size: 1.05rem;
+  }
+  .apto-detail {
+    font-size: 0.85rem;
+  }
+  .apto-detail svg {
+    width: 18px;
+    height: 18px;
+  }
+  .apto-status-badge {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
+  .finance-status {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+  }
+}
+
 @media (min-width: 768px) {
   .fab {
     bottom: 24px;
@@ -183,8 +245,15 @@
 
 @media (min-width: 1024px) {
   .apartments-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(4, 1fr);
   }
+}
+
+.apto-resident-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
 }

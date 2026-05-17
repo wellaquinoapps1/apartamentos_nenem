@@ -1,22 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { 
-  Search, 
-  User, 
-  Wallet, 
-  CheckCircle2, 
+import {
+  Search,
+  User,
+  Wallet,
+  CheckCircle2,
   AlertCircle,
   Plus,
   Filter,
   Calendar
 } from 'lucide-react';
 import './Apartments.css';
+import ApartmentDetailsModal from '../components/ApartmentDetailsModal';
 
 const Apartments = () => {
   const [apartments, setApartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('Todos');
+  const [selectedAptoId, setSelectedAptoId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchApartments();
@@ -30,13 +33,13 @@ const Apartments = () => {
         .from('apartamentos')
         .select(`
           *,
-          moradores(nome),
+          moradores(nome, foto_url),
           taxas(status)
         `)
         .order('numero', { ascending: true });
 
       if (error) throw error;
-      
+
       // Simplify data structure for the UI
       const formattedData = data.map(apto => ({
         id: apto.id,
@@ -44,6 +47,7 @@ const Apartments = () => {
         block: 'A', // Default block
         status: apto.status.toUpperCase(),
         resident: apto.moradores?.[0]?.nome || 'Nenhum morador',
+        resident_foto: apto.moradores?.[0]?.foto_url || null,
         financial: apto.taxas?.some(t => t.status === 'pendente') ? 'Pendente' : 'Pago',
         rent: apto.valor_aluguel,
         people: apto.qtd_pessoas,
@@ -51,7 +55,12 @@ const Apartments = () => {
         exit: apto.data_saida ? new Date(apto.data_saida).toLocaleDateString('pt-BR') : '--'
       }));
 
-      setApartments(formattedData);
+      // Sort naturally (numerical ascending order)
+      const sortedData = formattedData.sort((a, b) =>
+        a.numero.localeCompare(b.numero, undefined, { numeric: true, sensitivity: 'base' })
+      );
+
+      setApartments(sortedData);
     } catch (error) {
       console.error('Error fetching apartments:', error);
     } finally {
@@ -60,13 +69,13 @@ const Apartments = () => {
   };
 
   const filteredApartments = apartments.filter(apto => {
-    const matchesSearch = apto.numero.includes(searchTerm) || 
-                         apto.resident.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = apto.numero.includes(searchTerm) ||
+      apto.resident.toLowerCase().includes(searchTerm.toLowerCase());
+
     if (filter === 'Todos') return matchesSearch;
     if (filter === 'Ocupados') return matchesSearch && apto.status === 'OCUPADO';
     if (filter === 'Vagos') return matchesSearch && apto.status === 'VAGO';
-    if (filter === 'Inadim.') return matchesSearch && apto.financial === 'Pendente';
+    if (filter === 'Inadimplente.') return matchesSearch && apto.financial === 'Pendente';
     return matchesSearch;
   });
 
@@ -80,17 +89,17 @@ const Apartments = () => {
       <div className="search-filter-container">
         <div className="search-bar">
           <Search size={20} />
-          <input 
-            type="text" 
-            placeholder="Buscar por apto ou morador..." 
+          <input
+            type="text"
+            placeholder="Buscar por apto ou morador..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <div className="filter-chips">
-          {['Todos', 'Ocupados', 'Vagos', 'Inadim.'].map(f => (
-            <button 
+          {['Todos', 'Ocupados', 'Vagos', 'Inadimplente.'].map(f => (
+            <button
               key={f}
               className={`chip ${filter === f ? 'active' : ''}`}
               onClick={() => setFilter(f)}
@@ -108,21 +117,32 @@ const Apartments = () => {
           <div className="empty-state">Nenhum apartamento encontrado.</div>
         ) : (
           filteredApartments.map((apto) => (
-            <div key={apto.id} className="apto-card">
+            <div
+              key={apto.id}
+              className="apto-card"
+              onClick={() => {
+                setSelectedAptoId(apto.id);
+                setIsModalOpen(true);
+              }}
+            >
               <div className="apto-card-header">
                 <div className="apto-info">
                   <h3>Apto {apto.numero}</h3>
                   <span className="apto-block">Bloco {apto.block}</span>
                 </div>
-                <span className={`status-badge ${apto.status.toLowerCase()}`}>
+                <span className={`apto-status-badge ${apto.status.toLowerCase()}`}>
                   {apto.status}
                 </span>
               </div>
-              
+
               <div className="apto-card-body">
                 <div className="apto-detail">
-                  <User size={18} />
-                  <span className={apto.resident === 'Nenhum morador' ? 'muted' : ''}>
+                  {apto.resident_foto ? (
+                    <img src={apto.resident_foto} alt={apto.resident} className="apto-resident-thumb" />
+                  ) : (
+                    <User size={18} />
+                  )}
+                  <span className={`apto-resident-name ${apto.resident === 'Nenhum morador' ? 'muted' : ''}`}>
                     {apto.resident} {apto.people > 0 && `(${apto.people} pessoas)`}
                   </span>
                 </div>
@@ -159,6 +179,12 @@ const Apartments = () => {
       <button className="fab">
         <Plus size={24} />
       </button>
+
+      <ApartmentDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        apartmentId={selectedAptoId}
+      />
     </div>
   );
 };
