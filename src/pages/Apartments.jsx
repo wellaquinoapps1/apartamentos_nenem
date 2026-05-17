@@ -8,7 +8,8 @@ import {
   AlertCircle,
   Plus,
   Filter,
-  Calendar
+  Calendar,
+  Users
 } from 'lucide-react';
 import './Apartments.css';
 import ApartmentDetailsModal from '../components/ApartmentDetailsModal';
@@ -143,9 +144,18 @@ const Apartments = () => {
                     <User size={18} />
                   )}
                   <span className={`apto-resident-name ${apto.resident === 'Nenhum morador' ? 'muted' : ''}`}>
-                    {apto.resident} {apto.people > 0 && `(${apto.people} pessoas)`}
+                    {apto.resident}
                   </span>
                 </div>
+                {apto.people > 0 && (
+                  <div className="apto-detail">
+                    <Users size={18} />
+                    <span>
+                      <span className="detail-label">Moradores: </span>
+                      <strong>{apto.people} {apto.people === 1 ? 'pessoa' : 'pessoas'}</strong>
+                    </span>
+                  </div>
+                )}
                 <div className="apto-detail">
                   <Wallet size={18} />
                   <span><span className="detail-label">Aluguel: </span><strong>R$ {apto.rent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>

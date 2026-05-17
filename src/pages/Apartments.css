@@ -59,7 +59,7 @@
 
 .apartments-list {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -75,6 +75,7 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
   height: 100%;
+  min-width: 0;
 }
 
 .apto-card:hover {
@@ -127,6 +128,7 @@
   flex-direction: column;
   gap: 8px;
   flex: 1;
+  min-width: 0;
 }
 
 .apto-detail {
@@ -222,7 +224,7 @@
 
 @media (min-width: 640px) {
   .apartments-list {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
   .apto-card {
@@ -263,7 +265,7 @@
 
 @media (min-width: 1024px) {
   .apartments-list {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
