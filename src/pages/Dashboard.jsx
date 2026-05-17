@@ -55,33 +55,45 @@ const Dashboard = () => {
       // Fetch recent activities
       const { data: recentTaxas } = await supabase
         .from('taxas')
-        .select('*, apartamentos(numero)')
+        .select('*, apartamentos(numero, moradores(nome))')
         .order('created_at', { ascending: false })
         .limit(2);
 
       const { data: recentOcorrencias } = await supabase
         .from('ocorrencias')
-        .select('*, apartamentos(numero)')
+        .select('*, apartamentos(numero, moradores(nome))')
         .order('created_at', { ascending: false })
         .limit(2);
 
       const combinedActivities = [
-        ...(recentTaxas || []).map(t => ({
-          id: `tax-${t.id}`,
-          type: 'taxa',
-          title: `Unidade ${t.apartamentos?.numero}`,
-          message: t.status === 'pago' ? 'pagou o condomínio.' : 'tem uma nova taxa pendente.',
-          time: new Date(t.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          status: t.status === 'pago' ? 'success' : 'warning'
-        })),
-        ...(recentOcorrencias || []).map(o => ({
-          id: `oc-${o.id}`,
-          type: 'ocorrencia',
-          title: `Nova Ocorrência:`,
-          message: `${o.descricao} (Apto ${o.apartamentos?.numero})`,
-          time: new Date(o.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          status: 'warning'
-        }))
+        ...(recentTaxas || []).map(t => {
+          const moradorNome = t.apartamentos?.moradores?.[0]?.nome;
+          const moradorFoto = t.apartamentos?.moradores?.[0]?.foto_url;
+          return {
+            id: `tax-${t.id}`,
+            type: 'taxa',
+            title: moradorNome ? `Apto ${t.apartamentos?.numero} - ${moradorNome}` : `Apto ${t.apartamentos?.numero}`,
+            message: t.status === 'pago' ? 'pagou o condomínio.' : 'tem uma nova taxa pendente.',
+            time: new Date(t.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            status: t.status === 'pago' ? 'success' : 'warning',
+            fotoUrl: moradorFoto,
+            shortName: moradorNome || `Apto ${t.apartamentos?.numero}`
+          };
+        }),
+        ...(recentOcorrencias || []).map(o => {
+          const moradorNome = o.apartamentos?.moradores?.[0]?.nome;
+          const moradorFoto = o.apartamentos?.moradores?.[0]?.foto_url;
+          return {
+            id: `oc-${o.id}`,
+            type: 'ocorrencia',
+            title: `Nova Ocorrência:`,
+            message: `${o.descricao} (Apto ${o.apartamentos?.numero}${moradorNome ? ` - ${moradorNome}` : ''})`,
+            time: new Date(o.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            status: 'warning',
+            fotoUrl: moradorFoto,
+            shortName: moradorNome || `Apto ${o.apartamentos?.numero}`
+          };
+        })
       ].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 4);
 
       setActivities(combinedActivities);
@@ -209,18 +221,25 @@ const Dashboard = () => {
             activities.map(activity => (
               <div key={activity.id} className="activity-item">
                 <div className="avatar-wrapper">
-                  {activity.type === 'taxa' ? (
-                    <>
-                      <img src={`https://ui-avatars.com/api/?name=${activity.title}&background=random`} alt="User" />
-                      {activity.status === 'success' && (
-                        <div className="status-badge success">
-                          <CheckCircle2 size={12} />
-                        </div>
-                      )}
-                    </>
+                  {activity.fotoUrl ? (
+                    <img src={activity.fotoUrl} alt={activity.shortName} />
                   ) : (
-                    <div className="icon-avatar warning">
-                      <AlertCircle size={20} />
+                    <img src={`https://ui-avatars.com/api/?name=${activity.shortName}&background=random`} alt="User Avatar" />
+                  )}
+                  
+                  {activity.type === 'taxa' && activity.status === 'success' && (
+                    <div className="status-badge success">
+                      <CheckCircle2 size={12} />
+                    </div>
+                  )}
+                  {activity.type === 'taxa' && activity.status === 'warning' && (
+                    <div className="status-badge warning" style={{ backgroundColor: '#f59e0b', color: 'white', borderColor: 'white' }}>
+                      <AlertCircle size={12} />
+                    </div>
+                  )}
+                  {activity.type === 'ocorrencia' && (
+                    <div className="status-badge warning" style={{ backgroundColor: '#ef4444', color: 'white', borderColor: 'white' }}>
+                      <AlertCircle size={12} />
                     </div>
                   )}
                 </div>
