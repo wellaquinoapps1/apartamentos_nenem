@@ -11,7 +11,8 @@ import {
   FileText,
   ChevronRight,
   MoreVertical,
-  CheckCircle2
+  CheckCircle2,
+  User
 } from 'lucide-react';
 import './Dashboard.css';
 
@@ -23,6 +24,7 @@ const Dashboard = () => {
     ocorrencias: 0
   });
   const [activities, setActivities] = useState([]);
+  const [apartments, setApartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,6 +41,16 @@ const Dashboard = () => {
           pendencias: pendencias || 0,
           ocorrencias: ocorrencias || 0
         });
+
+        // Fetch apartments with residents
+        const { data: aptosData } = await supabase
+          .from('apartamentos')
+          .select('*, moradores(nome)');
+
+        const sortedAptos = (aptosData || []).sort((a, b) => 
+          a.numero.localeCompare(b.numero, undefined, { numeric: true, sensitivity: 'base' })
+        );
+        setApartments(sortedAptos);
 
         // Fetch recent activities
         const { data: recentTaxas } = await supabase
@@ -155,6 +167,37 @@ const Dashboard = () => {
             </div>
             <span>Gerar Boleto</span>
           </button>
+        </div>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="section-header">
+          <h2 className="section-title">Ocupação das Unidades</h2>
+          <Link to="/apartamentos" className="text-link">Ver Todos</Link>
+        </div>
+        <div className="apartments-grid">
+          {apartments.map((apto) => {
+            const hasResident = apto.moradores && apto.moradores.length > 0;
+            const residentName = hasResident ? apto.moradores[0].nome : null;
+            const isOccupied = apto.status === 'ocupado';
+
+            return (
+              <div key={apto.id} className="apt-card-dashboard">
+                <div className="apt-card-header">
+                  <span className="apt-number">Apto {apto.numero}</span>
+                  <span className={`apt-badge ${isOccupied ? 'occupied' : 'vacant'}`}>
+                    {isOccupied ? 'Ocupado' : 'Vazio'}
+                  </span>
+                </div>
+                <div className="apt-card-body">
+                  <User size={14} className={hasResident ? 'icon-active' : 'icon-muted'} />
+                  <span className={`apt-resident ${hasResident ? 'has-resident' : 'no-resident'}`} title={residentName || 'Sem morador'}>
+                    {hasResident ? residentName : 'Sem morador'}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

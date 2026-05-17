@@ -1,10 +1,10 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Users, 
-  Wallet, 
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  Wallet,
   AlertTriangle,
   Bell,
   Menu
@@ -17,7 +17,7 @@ const Layout = ({ children }) => {
   const navItems = [
     { path: '/', label: 'Início', icon: <LayoutDashboard size={20} /> },
     { path: '/apartamentos', label: 'Aptos', icon: <Building2 size={20} /> },
-    { path: '/moradores', label: 'Gente', icon: <Users size={20} /> },
+    { path: '/moradores', label: 'Moradores', icon: <Users size={20} /> },
     { path: '/financeiro', label: 'Finanças', icon: <Wallet size={20} /> },
     { path: '/ocorrencias', label: 'Alertas', icon: <AlertTriangle size={20} /> },
   ];
@@ -34,9 +34,9 @@ const Layout = ({ children }) => {
         </div>
         <nav className="sidebar-nav">
           {navItems.map((item) => (
-            <NavLink 
-              key={item.path} 
-              to={item.path} 
+            <NavLink
+              key={item.path}
+              to={item.path}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               {item.icon}
@@ -69,9 +69,9 @@ const Layout = ({ children }) => {
       {/* Mobile Bottom Nav */}
       <nav className="bottom-nav">
         {navItems.map((item) => (
-          <NavLink 
-            key={item.path} 
-            to={item.path} 
+          <NavLink
+            key={item.path}
+            to={item.path}
             className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
           >
             {item.icon}

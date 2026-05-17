@@ -12,6 +12,10 @@ CREATE TABLE apartamentos (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   numero TEXT NOT NULL UNIQUE,
   status TEXT NOT NULL DEFAULT 'vazio' CHECK (status IN ('ocupado', 'vazio')),
+  qtd_pessoas INTEGER DEFAULT 0,
+  valor_aluguel DECIMAL(10,2) DEFAULT 0,
+  data_entrada DATE,
+  data_saida DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -57,12 +61,12 @@ CREATE TABLE comunicados (
 );
 
 -- Inserindo dados iniciais (10 apartamentos: 1 a 10)
-INSERT INTO apartamentos (numero, status) VALUES 
-('1', 'vazio'), ('2', 'vazio'),
-('3', 'vazio'), ('4', 'vazio'),
-('5', 'vazio'), ('6', 'vazio'),
-('7', 'vazio'), ('8', 'vazio'),
-('9', 'vazio'), ('10', 'vazio');
+INSERT INTO apartamentos (numero, status, valor_aluguel) VALUES 
+('1', 'vazio', 850.00), ('2', 'vazio', 850.00),
+('3', 'vazio', 850.00), ('4', 'vazio', 900.00),
+('5', 'vazio', 900.00), ('6', 'vazio', 900.00),
+('7', 'vazio', 950.00), ('8', 'vazio', 950.00),
+('9', 'vazio', 1000.00), ('10', 'vazio', 1000.00);
 
 -- Habilitando RLS (Row Level Security) - Como é admin único, pode ser simplificado ou configurado conforme auth
 ALTER TABLE apartamentos ENABLE ROW LEVEL SECURITY;

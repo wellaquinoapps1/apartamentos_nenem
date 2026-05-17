@@ -9,8 +9,11 @@ import {
   Mail, 
   Building,
   Save,
-  Loader2
+  Loader2,
+  Calendar,
+  Wallet
 } from 'lucide-react';
+import { formatCPF, formatPhone, formatCurrency, parseCurrency } from '../utils/formatters';
 import './ResidentForm.css';
 
 const ResidentForm = () => {
@@ -23,7 +26,11 @@ const ResidentForm = () => {
     cpf: '',
     telefone: '',
     email: '',
-    apartamento_id: ''
+    apartamento_id: '',
+    qtd_pessoas: 1,
+    valor_aluguel: 'R$ 0,00',
+    data_entrada: new Date().toISOString().split('T')[0],
+    data_saida: ''
   });
 
   useEffect(() => {
@@ -36,7 +43,18 @@ const ResidentForm = () => {
       .select('id, numero')
       .order('numero', { ascending: true });
     
-    if (!error) setApartments(data);
+    if (!error) {
+      setApartments(data);
+    }
+  };
+
+  const handleAptoChange = (aptoId) => {
+    const selected = apartments.find(a => a.id === aptoId);
+    setFormData({
+      ...formData, 
+      apartamento_id: aptoId,
+      valor_aluguel: formatCurrency(selected?.valor_aluguel?.toString() || '0')
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -47,16 +65,30 @@ const ResidentForm = () => {
       // 1. Insert Resident
       const { error: resError } = await supabase
         .from('moradores')
-        .insert([formData]);
+        .insert([{
+          nome: formData.nome,
+          cpf: formData.cpf,
+          telefone: formData.telefone,
+          email: formData.email,
+          apartamento_id: formData.apartamento_id
+        }]);
 
       if (resError) throw resError;
 
-      // 2. Update Apartment Status if one was selected
+      // 2. Update Apartment Status and Details
       if (formData.apartamento_id) {
-        await supabase
+        const { error: aptoError } = await supabase
           .from('apartamentos')
-          .update({ status: 'ocupado' })
+          .update({ 
+            status: 'ocupado',
+            qtd_pessoas: parseInt(formData.qtd_pessoas),
+            valor_aluguel: parseCurrency(formData.valor_aluguel),
+            data_entrada: formData.data_entrada,
+            data_saida: formData.data_saida || null
+          })
           .eq('id', formData.apartamento_id);
+
+        if (aptoError) throw aptoError;
       }
 
       alert('Morador cadastrado com sucesso!');
@@ -102,7 +134,8 @@ const ResidentForm = () => {
                 type="text" 
                 placeholder="000.000.000-00" 
                 value={formData.cpf}
-                onChange={(e) => setFormData({...formData, cpf: e.target.value})}
+                maxLength={14}
+                onChange={(e) => setFormData({...formData, cpf: formatCPF(e.target.value)})}
               />
             </div>
           </div>
@@ -115,7 +148,8 @@ const ResidentForm = () => {
                 type="text" 
                 placeholder="(00) 00000-0000" 
                 value={formData.telefone}
-                onChange={(e) => setFormData({...formData, telefone: e.target.value})}
+                maxLength={15}
+                onChange={(e) => setFormData({...formData, telefone: formatPhone(e.target.value)})}
               />
             </div>
           </div>
@@ -141,13 +175,66 @@ const ResidentForm = () => {
             <select 
               required
               value={formData.apartamento_id}
-              onChange={(e) => setFormData({...formData, apartamento_id: e.target.value})}
+              onChange={(e) => handleAptoChange(e.target.value)}
             >
               <option value="">Selecione uma unidade</option>
               {apartments.map(apto => (
                 <option key={apto.id} value={apto.id}>Apto {apto.numero}</option>
               ))}
             </select>
+          </div>
+        </div>
+
+        <div className="form-grid">
+          <div className="form-section">
+            <label>Qtd. de Pessoas</label>
+            <div className="input-wrapper">
+              <User className="input-icon" size={20} />
+              <input 
+                type="number" 
+                min="1"
+                value={formData.qtd_pessoas}
+                onChange={(e) => setFormData({...formData, qtd_pessoas: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-section">
+            <label>Valor do Aluguel</label>
+            <div className="input-wrapper">
+              <Wallet className="input-icon" size={20} />
+              <input 
+                type="text" 
+                value={formData.valor_aluguel}
+                onChange={(e) => setFormData({...formData, valor_aluguel: formatCurrency(e.target.value)})}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="form-grid">
+          <div className="form-section">
+            <label>Data de Entrada</label>
+            <div className="input-wrapper">
+              <Calendar className="input-icon" size={20} />
+              <input 
+                type="date" 
+                value={formData.data_entrada}
+                onChange={(e) => setFormData({...formData, data_entrada: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-section">
+            <label>Data de Saída (Opcional)</label>
+            <div className="input-wrapper">
+              <Calendar className="input-icon" size={20} />
+              <input 
+                type="date" 
+                value={formData.data_saida}
+                onChange={(e) => setFormData({...formData, data_saida: e.target.value})}
+              />
+            </div>
           </div>
         </div>
 

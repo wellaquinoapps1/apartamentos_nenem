@@ -7,7 +7,8 @@ import {
   CheckCircle2, 
   AlertCircle,
   Plus,
-  Filter
+  Filter,
+  Calendar
 } from 'lucide-react';
 import './Apartments.css';
 
@@ -40,10 +41,14 @@ const Apartments = () => {
       const formattedData = data.map(apto => ({
         id: apto.id,
         numero: apto.numero,
-        block: 'A', // Default block as seen in designs
+        block: 'A', // Default block
         status: apto.status.toUpperCase(),
         resident: apto.moradores?.[0]?.nome || 'Nenhum morador',
-        financial: apto.taxas?.some(t => t.status === 'pendente') ? 'Pendente' : 'Pago'
+        financial: apto.taxas?.some(t => t.status === 'pendente') ? 'Pendente' : 'Pago',
+        rent: apto.valor_aluguel,
+        people: apto.qtd_pessoas,
+        entry: apto.data_entrada ? new Date(apto.data_entrada).toLocaleDateString('pt-BR') : '--',
+        exit: apto.data_saida ? new Date(apto.data_saida).toLocaleDateString('pt-BR') : '--'
       }));
 
       setApartments(formattedData);
@@ -118,11 +123,26 @@ const Apartments = () => {
                 <div className="apto-detail">
                   <User size={18} />
                   <span className={apto.resident === 'Nenhum morador' ? 'muted' : ''}>
-                    {apto.resident}
+                    {apto.resident} {apto.people > 0 && `(${apto.people} pessoas)`}
                   </span>
                 </div>
                 <div className="apto-detail">
                   <Wallet size={18} />
+                  <span>Aluguel: <strong>R$ {apto.rent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
+                </div>
+                <div className="apto-dates">
+                  <div className="apto-detail mini">
+                    <Calendar size={14} />
+                    <span>Entrada: {apto.entry}</span>
+                  </div>
+                  {apto.exit !== '--' && (
+                    <div className="apto-detail mini">
+                      <Calendar size={14} />
+                      <span>Saída: {apto.exit}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="apto-detail status-row">
                   <span>Financeiro:</span>
                   <div className={`finance-status ${apto.financial.toLowerCase()}`}>
                     {apto.financial === 'Pago' && <CheckCircle2 size={16} />}

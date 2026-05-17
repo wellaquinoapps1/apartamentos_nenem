@@ -122,12 +122,37 @@
   opacity: 0.7;
 }
 
+.apto-detail.status-row {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  justify-content: space-between;
+}
+
+.apto-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.apto-detail.mini {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.apto-detail.mini svg {
+  color: #94a3b8;
+}
+
 .finance-status {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-left: auto;
+  gap: 6px;
+  font-size: 0.85rem;
   font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
 }
 
 .finance-status.pago { color: var(--success); }
