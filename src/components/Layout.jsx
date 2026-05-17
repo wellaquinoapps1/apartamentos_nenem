@@ -7,14 +7,17 @@ import {
   Wallet,
   AlertTriangle,
   Bell,
-  Menu
+  Menu,
+  LogOut
 } from 'lucide-react';
 import { getSettings } from '../lib/settings';
+import { useAuth } from '../lib/AuthContext';
 import './Layout.css';
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const [settings, setSettings] = useState(getSettings());
+  const { currentUser, logout } = useAuth();
 
   useEffect(() => {
     const handleUpdate = () => setSettings(getSettings());
@@ -54,12 +57,15 @@ const Layout = ({ children }) => {
         </nav>
         <div className="sidebar-footer">
           <Link to="/dev" className="sidebar-profile" title="Área do Desenvolvedor">
-            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(settings.nomeAdmin)}&background=${settings.corAvatar}&color=fff`} alt="Profile" />
+            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.nome || 'User')}&background=${settings.corAvatar}&color=fff`} alt="Profile" />
             <div className="profile-info">
-              <span className="profile-name">{settings.nomeAdmin}</span>
-              <span className="profile-role">Desenvolvedor</span>
+              <span className="profile-name">{currentUser?.nome}</span>
+              <span className="profile-role">{currentUser?.role === 'dev' ? 'Desenvolvedor' : 'Administrador'}</span>
             </div>
           </Link>
+          <button className="btn-logout" onClick={logout} title="Sair do sistema">
+            <LogOut size={20} />
+          </button>
         </div>
       </aside>
 
@@ -70,11 +76,11 @@ const Layout = ({ children }) => {
         </button>
         <span className="brand-name">{settings.nomeResidencial}</span>
         <div className="header-actions">
-          <button className="icon-btn">
-            <Bell size={24} />
+          <button className="icon-btn" onClick={logout} title="Sair do sistema">
+            <LogOut size={22} />
           </button>
-          <Link to="/dev" className="profile-avatar" title="Área do Desenvolvedor">
-            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(settings.nomeAdmin)}&background=${settings.corAvatar}&color=fff`} alt="Profile" />
+          <Link to="/dev" className="profile-avatar" title="Perfil">
+            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.nome || 'User')}&background=${settings.corAvatar}&color=fff`} alt="Profile" />
           </Link>
         </div>
       </header>

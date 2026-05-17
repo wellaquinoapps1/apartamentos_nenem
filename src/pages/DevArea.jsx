@@ -13,7 +13,8 @@ import {
   Building,
   User,
   Activity,
-  HardDrive
+  HardDrive,
+  Users
 } from 'lucide-react';
 import './DevArea.css';
 
@@ -24,6 +25,13 @@ const DevArea = () => {
   const [message, setMessage] = useState(null);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+
+  // Admin Management States
+  const [adminsList, setAdminsList] = useState([]);
+  const [adminsLoading, setAdminsLoading] = useState(true);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [adminForm, setAdminForm] = useState({ nome: '', email: '', senha: '', role: 'admin' });
 
   // Available avatar colors
   const colorOptions = [
@@ -38,7 +46,98 @@ const DevArea = () => {
   useEffect(() => {
     fetchStats();
     checkConnection();
+    fetchAdmins();
   }, []);
+
+  const fetchAdmins = async () => {
+    try {
+      setAdminsLoading(true);
+      const { data, error } = await supabase
+        .from('admins')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      setAdminsList(data || []);
+    } catch (e) {
+      console.error('Erro ao buscar admins:', e);
+      showToast('Erro ao carregar lista de administradores.', 'error');
+    } finally {
+      setAdminsLoading(false);
+    }
+  };
+
+  const handleAdminFormChange = (field, val) => {
+    setAdminForm(prev => ({ ...prev, [field]: val }));
+  };
+
+  const handleOpenAdminModal = (admin = null) => {
+    if (admin) {
+      setSelectedAdmin(admin);
+      setAdminForm({ nome: admin.nome, email: admin.email, senha: admin.senha, role: admin.role });
+    } else {
+      setSelectedAdmin(null);
+      setAdminForm({ nome: '', email: '', senha: '', role: 'admin' });
+    }
+    setShowAdminModal(true);
+  };
+
+  const handleSaveAdmin = async (e) => {
+    e.preventDefault();
+    try {
+      if (selectedAdmin) {
+        const { error } = await supabase
+          .from('admins')
+          .update({
+            nome: adminForm.nome,
+            email: adminForm.email,
+            senha: adminForm.senha,
+            role: adminForm.role
+          })
+          .eq('id', selectedAdmin.id);
+
+        if (error) throw error;
+        showToast('Administrador atualizado com sucesso!', 'success');
+      } else {
+        const { error } = await supabase
+          .from('admins')
+          .insert([
+            {
+              nome: adminForm.nome,
+              email: adminForm.email,
+              senha: adminForm.senha,
+              role: adminForm.role
+            }
+          ]);
+
+        if (error) throw error;
+        showToast('Administrador adicionado com sucesso!', 'success');
+      }
+      setShowAdminModal(false);
+      fetchAdmins();
+    } catch (err) {
+      console.error(err);
+      showToast(`Erro ao salvar: ${err.message}`, 'error');
+    }
+  };
+
+  const handleDeleteAdmin = async (id, email) => {
+    if (email === 'welldeveloper@dev.com') {
+      showToast('O desenvolvedor mestre não pode ser excluído!', 'error');
+      return;
+    }
+    const confirm = window.confirm(`Remover acesso de ${email}?`);
+    if (!confirm) return;
+
+    try {
+      const { error } = await supabase.from('admins').delete().eq('id', id);
+      if (error) throw error;
+      showToast('Acesso removido com sucesso!', 'success');
+      fetchAdmins();
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao remover acesso.', 'error');
+    }
+  };
 
   const checkConnection = async () => {
     try {
@@ -416,6 +515,161 @@ const DevArea = () => {
           </div>
         </div>
       </div>
+
+      {/* Administradores / Acessos Management */}
+      <div className="dev-card glass full-width" style={{ marginTop: '24px' }}>
+        <div className="dev-card-header" style={{ justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Users className="card-icon" />
+            <h2>Gestão de Administradores & Acessos</h2>
+          </div>
+          <button 
+            type="button" 
+            className="btn-save-settings" 
+            style={{ margin: 0, padding: '8px 16px', fontSize: '0.8rem' }}
+            onClick={() => handleOpenAdminModal()}
+          >
+            Adicionar Administrador
+          </button>
+        </div>
+
+        <div className="admins-table-container" style={{ overflowX: 'auto' }}>
+          {adminsLoading ? (
+            <div className="stats-loading">Carregando lista...</div>
+          ) : (
+            <table className="admins-table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '12px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
+                  <th style={{ padding: '12px 8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Nome</th>
+                  <th style={{ padding: '12px 8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>E-mail</th>
+                  <th style={{ padding: '12px 8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Senha</th>
+                  <th style={{ padding: '12px 8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tipo</th>
+                  <th style={{ padding: '12px 8px', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'right' }}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminsList.map((adm) => (
+                  <tr key={adm.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '12px 8px', fontSize: '0.85rem', fontWeight: 600 }}>{adm.nome}</td>
+                    <td style={{ padding: '12px 8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{adm.email}</td>
+                    <td style={{ padding: '12px 8px', fontSize: '0.85rem' }}><code>{adm.senha}</code></td>
+                    <td style={{ padding: '12px 8px' }}>
+                      <span className={`status-indicator ${adm.role === 'dev' ? 'checking' : 'connected'}`} style={{ display: 'inline-flex', padding: '2px 8px', fontSize: '0.7rem' }}>
+                        {adm.role === 'dev' ? 'Desenvolvedor' : 'Administrador'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                      <button 
+                        style={{ padding: '6px 12px', fontSize: '0.75rem', borderRadius: '6px', color: 'var(--primary)', fontWeight: 600, marginRight: '8px', cursor: 'pointer' }}
+                        onClick={() => handleOpenAdminModal(adm)}
+                      >
+                        Editar
+                      </button>
+                      {adm.email !== 'welldeveloper@dev.com' && (
+                        <button 
+                          style={{ padding: '6px 12px', fontSize: '0.75rem', borderRadius: '6px', color: 'var(--danger)', fontWeight: 600, cursor: 'pointer' }}
+                          onClick={() => handleDeleteAdmin(adm.id, adm.email)}
+                        >
+                          Excluir
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* Modal para Adicionar/Editar Admin */}
+      {showAdminModal && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal glass">
+            <h3 style={{ marginBottom: '16px', fontSize: '1.2rem', fontWeight: 700 }}>
+              {selectedAdmin ? 'Editar Administrador' : 'Adicionar Administrador'}
+            </h3>
+            <form onSubmit={handleSaveAdmin} className="dev-form">
+              <div className="form-group">
+                <label htmlFor="modal-nome">Nome</label>
+                <input
+                  type="text"
+                  id="modal-nome"
+                  value={adminForm.nome}
+                  onChange={(e) => handleAdminFormChange('nome', e.target.value)}
+                  placeholder="Ex: João Silva"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="modal-email">E-mail</label>
+                <input
+                  type="email"
+                  id="modal-email"
+                  value={adminForm.email}
+                  disabled={selectedAdmin?.email === 'welldeveloper@dev.com'}
+                  onChange={(e) => handleAdminFormChange('email', e.target.value)}
+                  placeholder="Ex: joao@email.com"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="modal-senha">Senha</label>
+                <input
+                  type="text"
+                  id="modal-senha"
+                  value={adminForm.senha}
+                  onChange={(e) => handleAdminFormChange('senha', e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="modal-role">Tipo de Acesso</label>
+                <select
+                  id="modal-role"
+                  value={adminForm.role}
+                  disabled={selectedAdmin?.email === 'welldeveloper@dev.com'}
+                  onChange={(e) => handleAdminFormChange('role', e.target.value)}
+                  className="form-group input"
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border)',
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--background)',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="admin">Administrador</option>
+                  <option value="dev">Desenvolvedor (Dev)</option>
+                </select>
+              </div>
+
+              <div className="modal-actions" style={{ display: 'flex', gap: '12px', marginTop: '16px', justifyContent: 'flex-end' }}>
+                <button 
+                  type="button" 
+                  className="btn-dev-action seed"
+                  style={{ padding: '8px 16px', flex: 'none' }}
+                  onClick={() => setShowAdminModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-save-settings"
+                  style={{ padding: '8px 16px', margin: 0 }}
+                >
+                  Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

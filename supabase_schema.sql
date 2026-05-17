@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS ocorrencias CASCADE;
 DROP TABLE IF EXISTS taxas CASCADE;
 DROP TABLE IF EXISTS moradores CASCADE;
 DROP TABLE IF EXISTS apartamentos CASCADE;
+DROP TABLE IF EXISTS admins CASCADE;
 
 -- Tabela de Apartamentos
 CREATE TABLE apartamentos (
@@ -61,6 +62,20 @@ CREATE TABLE comunicados (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Tabela de Administradores e Devs
+CREATE TABLE admins (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  nome TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  senha TEXT NOT NULL DEFAULT '123456',
+  role TEXT DEFAULT 'admin' CHECK (role IN ('dev', 'admin')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Inserir o desenvolvedor mestre
+INSERT INTO admins (nome, email, senha, role) 
+VALUES ('Developer', 'welldeveloper@dev.com', 'admin123', 'dev');
+
 -- Inserindo dados iniciais (10 apartamentos: 1 a 10)
 INSERT INTO apartamentos (numero, status, valor_aluguel) VALUES 
 ('1', 'vazio', 850.00), ('2', 'vazio', 850.00),
@@ -75,14 +90,15 @@ ALTER TABLE moradores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE taxas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ocorrencias ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comunicados ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 
--- Políticas básicas (Acesso total para o usuário autenticado)
 -- Políticas básicas (Acesso total para simplificar o desenvolvimento inicial)
 CREATE POLICY "Allow all" ON apartamentos FOR ALL USING (true);
 CREATE POLICY "Allow all" ON moradores FOR ALL USING (true);
 CREATE POLICY "Allow all" ON taxas FOR ALL USING (true);
 CREATE POLICY "Allow all" ON ocorrencias FOR ALL USING (true);
 CREATE POLICY "Allow all" ON comunicados FOR ALL USING (true);
+CREATE POLICY "Allow all" ON admins FOR ALL USING (true);
 
 -- ============================================================================
 -- MIGRAÇÃO (RODAR APENAS ISSO CASO A TABELA MORADORES JÁ EXISTA):

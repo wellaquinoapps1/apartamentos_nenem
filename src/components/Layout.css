@@ -53,6 +53,26 @@
   margin-top: auto;
   padding: 20px 12px;
   border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.btn-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .sidebar-profile {
@@ -108,12 +128,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
+  padding: 0 20px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  position: fixed;
   top: 0;
-  z-index: 90;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
 }
 
 .brand-name {
