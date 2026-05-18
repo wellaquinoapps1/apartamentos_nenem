@@ -191,10 +191,6 @@ const Apartments = () => {
         )}
       </div>
 
-      <button className="fab">
-        <Plus size={24} />
-      </button>
-
       <ApartmentDetailsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

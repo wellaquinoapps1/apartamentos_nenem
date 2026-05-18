@@ -117,7 +117,7 @@ const ResidentForm = () => {
         nome: formData.nome,
         cpf: formData.cpf,
         telefone: formData.telefone,
-        email: formData.email,
+        email: null,
         local_trabalho: formData.local_trabalho || null,
         dia_pagamento: formData.dia_pagamento ? parseInt(formData.dia_pagamento) : null
       };
@@ -250,18 +250,6 @@ const ResidentForm = () => {
           </div>
         </div>
 
-        <div className="form-section">
-          <label>E-mail</label>
-          <div className="input-wrapper">
-            <Mail className="input-icon" size={20} />
-            <input 
-              type="email" 
-              placeholder="joao@email.com" 
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-            />
-          </div>
-        </div>
 
         <div className="form-grid">
           <div className="form-section">

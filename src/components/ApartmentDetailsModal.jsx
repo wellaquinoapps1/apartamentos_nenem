@@ -656,18 +656,7 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
                                   )}
                                 </div>
                                 
-                                <div className="resident-detail-row">
-                                  <Mail size={14} />
-                                  <span className="email-span">{resident.email || 'Não informado'}</span>
-                                  {resident.email && (
-                                    <button 
-                                      className="copy-shortcut-btn"
-                                      onClick={() => handleCopy(resident.email, 'E-mail')}
-                                    >
-                                      <Copy size={12} />
-                                    </button>
-                                  )}
-                                </div>
+
 
                                 {resident.cpf && (
                                   <div className="resident-detail-row text-secondary">

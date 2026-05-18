@@ -293,10 +293,7 @@ const Residents = () => {
                     <span className="detail-label">Telefone</span>
                     <span className="detail-value">{detailModal.resident.phone}</span>
                   </div>
-                  <div className="detail-item">
-                    <span className="detail-label">E-mail</span>
-                    <span className="detail-value">{detailModal.resident.email}</span>
-                  </div>
+
                 </div>
               </div>
 
