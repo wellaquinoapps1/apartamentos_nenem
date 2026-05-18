@@ -145,4 +145,20 @@ CREATE TABLE IF NOT EXISTS despesas (
 -- 4. Habilitar RLS e criar política de livre acesso na nova tabela despesas
 ALTER TABLE despesas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all" ON despesas FOR ALL USING (true);
+
+-- 5. Criação da tabela de Histórico de Moradores
+CREATE TABLE IF NOT EXISTS historico_moradores (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  apartamento_id UUID REFERENCES apartamentos(id) ON DELETE CASCADE,
+  morador_id UUID REFERENCES moradores(id) ON DELETE SET NULL,
+  morador_nome TEXT NOT NULL,
+  data_entrada DATE NOT NULL,
+  data_saida DATE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 6. Habilitar RLS e criar política de livre acesso na nova tabela historico_moradores
+ALTER TABLE historico_moradores ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all" ON historico_moradores FOR ALL USING (true);
 -- ============================================================================
+
