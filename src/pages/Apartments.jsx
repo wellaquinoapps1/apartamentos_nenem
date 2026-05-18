@@ -80,7 +80,7 @@ const Apartments = () => {
 
     if (filter === 'Todos') return matchesSearch;
     if (filter === 'Ocupados') return matchesSearch && apto.status === 'OCUPADO';
-    if (filter === 'Vagos') return matchesSearch && apto.status === 'VAGO';
+    if (filter === 'Vagos') return matchesSearch && (apto.status === 'VAGO' || apto.status === 'VAZIO');
     if (filter === 'Inadimplente.') return matchesSearch && apto.financial === 'Pendente';
     return matchesSearch;
   });

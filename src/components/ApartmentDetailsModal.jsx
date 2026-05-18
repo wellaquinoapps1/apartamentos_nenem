@@ -25,6 +25,7 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
   const [copiedText, setCopiedText] = useState('');
   const [showVacateConfirm, setShowVacateConfirm] = useState(false);
   const [vacating, setVacating] = useState(false);
+  const [vacateDate, setVacateDate] = useState('');
   
   const [isEditingApt, setIsEditingApt] = useState(false);
   const [savingApt, setSavingApt] = useState(false);
@@ -79,22 +80,22 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
     try {
       setVacating(true);
       
-      // 1. Delete resident from moradores
-      const { error: deleteError } = await supabase
+      // 1. Unlink resident from apartment (do NOT delete)
+      const { error: unlinkError } = await supabase
         .from('moradores')
-        .delete()
+        .update({ apartamento_id: null })
         .eq('id', resident.id);
         
-      if (deleteError) throw deleteError;
+      if (unlinkError) throw unlinkError;
 
-      // 2. Reset apartment status to vazio
+      // 2. Reset apartment status to vazio, set data_saida, and clear qtd_pessoas / data_entrada
       const { error: updateError } = await supabase
         .from('apartamentos')
         .update({
           status: 'vazio',
           qtd_pessoas: null,
           data_entrada: null,
-          data_saida: null
+          data_saida: vacateDate || null
         })
         .eq('id', apartment.id);
 
@@ -461,8 +462,18 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
                             {showVacateConfirm ? (
                               <div className="vacate-confirm-container">
                                 <p className="vacate-confirm-text">
-                                  Tem certeza que deseja remover o morador e desocupar este apartamento? Essa ação é permanente.
+                                  O morador será desvinculado deste apartamento, mas seu cadastro será mantido no sistema.
                                 </p>
+                                <div className="form-group-modal" style={{ marginBottom: '12px' }}>
+                                  <label style={{ color: '#991b1b' }}>Data de Saída</label>
+                                  <input 
+                                    type="date"
+                                    value={vacateDate}
+                                    onChange={(e) => setVacateDate(e.target.value)}
+                                    style={{ borderColor: '#fca5a5', backgroundColor: '#ffffff' }}
+                                    required
+                                  />
+                                </div>
                                 <div className="vacate-confirm-actions">
                                   <button 
                                     className="vacate-cancel-btn"
@@ -476,7 +487,7 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
                                     onClick={handleVacate}
                                     disabled={vacating}
                                   >
-                                    {vacating ? 'Removendo...' : 'Sim, Desocupar'}
+                                    {vacating ? 'Desocupando...' : 'Confirmar Desocupação'}
                                   </button>
                                 </div>
                               </div>
@@ -493,7 +504,10 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
                                 </button>
                                 <button 
                                   className="action-link-btn vacate-btn"
-                                  onClick={() => setShowVacateConfirm(true)}
+                                  onClick={() => {
+                                    setShowVacateConfirm(true);
+                                    setVacateDate(apartment?.data_saida || new Date().toISOString().split('T')[0]);
+                                  }}
                                 >
                                   Desocupar Apto
                                 </button>
