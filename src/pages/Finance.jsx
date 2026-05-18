@@ -894,30 +894,34 @@ const Finance = () => {
 
       {/* CONFIRMAÇÃO DE PAGAMENTO QUICK OVERLAY MODAL */}
       {confirmPaymentModal.isOpen && (
-        <div className="modal-overlay" onClick={() => setConfirmPaymentModal({ isOpen: false, item: null, type: '' })}>
-          <div className="modal-content confirm-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Confirmar Recebimento / Pagamento</h2>
+        <div className="confirm-modal-overlay" onClick={() => setConfirmPaymentModal({ isOpen: false, item: null, type: '' })}>
+          <div className="confirm-modal-card success" onClick={e => e.stopPropagation()}>
+            <div className="confirm-modal-icon success">
+              <Check size={32} />
             </div>
-            <div className="modal-body">
-              <p>Você confirma o recebimento/pagamento do seguinte registro?</p>
-              <div className="confirm-summary-box">
-                <span className="box-title">
-                  {confirmPaymentModal.type === 'receita' 
-                    ? `Apartamento ${confirmPaymentModal.item.unit} - ${confirmPaymentModal.item.morador}` 
-                    : confirmPaymentModal.item.description}
-                </span>
-                <span className="box-desc">{confirmPaymentModal.item.description}</span>
-                <span className={`box-amount ${confirmPaymentModal.type === 'receita' ? 'income' : 'expense'}`}>
-                  R$ {confirmPaymentModal.item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <p className="confirm-note">A data e o horário atual serão salvos permanentemente como a data deste pagamento.</p>
+            <h2 className="confirm-modal-title">Confirmar Recebimento / Pagamento</h2>
+            <p className="confirm-modal-text">Você confirma o recebimento/pagamento do seguinte registro?</p>
+            
+            <div className="confirm-modal-summary">
+              <span className="summary-title">
+                {confirmPaymentModal.type === 'receita' 
+                  ? `Apartamento ${confirmPaymentModal.item.unit} - ${confirmPaymentModal.item.morador}` 
+                  : confirmPaymentModal.item.description}
+              </span>
+              <span className="summary-desc">{confirmPaymentModal.item.description}</span>
+              <span className={`summary-amount ${confirmPaymentModal.type === 'receita' ? 'income' : 'expense'}`}>
+                R$ {confirmPaymentModal.item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
             </div>
-            <div className="modal-actions">
+            
+            <p className="confirm-modal-text" style={{ fontSize: '0.85rem', marginBottom: '24px' }}>
+              A data e o horário atual serão salvos permanentemente como a data deste pagamento.
+            </p>
+
+            <div className="confirm-modal-actions">
               <button 
                 type="button" 
-                className="btn-cancel" 
+                className="btn-confirm-cancel" 
                 onClick={() => setConfirmPaymentModal({ isOpen: false, item: null, type: '' })}
                 disabled={loading}
               >
@@ -925,11 +929,12 @@ const Finance = () => {
               </button>
               <button 
                 type="button" 
-                className="btn-primary" 
+                className="btn-confirm-success" 
                 onClick={handleTogglePayment}
                 disabled={loading}
               >
-                {loading ? 'Salvando...' : 'Sim, Confirmar'}
+                <Check size={18} />
+                <span>{loading ? 'Salvando...' : 'Sim, Confirmar'}</span>
               </button>
             </div>
           </div>
@@ -938,30 +943,35 @@ const Finance = () => {
 
       {/* CONFIRMAÇÃO DE DELEÇÃO */}
       {deleteConfirmModal.isOpen && (
-        <div className="modal-overlay" onClick={() => setDeleteConfirmModal({ isOpen: false, item: null, type: '' })}>
-          <div className="modal-content confirm-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Excluir Registro Financeiro</h2>
+        <div className="confirm-modal-overlay" onClick={() => setDeleteConfirmModal({ isOpen: false, item: null, type: '' })}>
+          <div className="confirm-modal-card danger" onClick={e => e.stopPropagation()}>
+            <div className="confirm-modal-icon danger">
+              <Trash2 size={32} />
             </div>
-            <div className="modal-body">
-              <p>Você tem certeza que deseja excluir permanentemente este lançamento?</p>
-              <div className="confirm-summary-box">
-                <span className="box-title">
-                  {deleteConfirmModal.type === 'receita' 
-                    ? `Apto ${deleteConfirmModal.item.unit} - ${deleteConfirmModal.item.morador}` 
-                    : deleteConfirmModal.item.description}
-                </span>
-                <span className="box-desc">{deleteConfirmModal.item.description}</span>
-                <span className="box-amount expense">
-                  R$ {deleteConfirmModal.item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <p className="confirm-note" style={{ color: '#ef4444', fontWeight: 'bold' }}>Atenção: Esta ação é definitiva e não poderá ser desfeita.</p>
+            <h2 className="confirm-modal-title">Excluir Registro Financeiro</h2>
+            <p className="confirm-modal-text">Você tem certeza que deseja excluir permanentemente este lançamento?</p>
+            
+            <div className="confirm-modal-summary">
+              <span className="summary-title">
+                {deleteConfirmModal.type === 'receita' 
+                  ? `Apto ${deleteConfirmModal.item.unit} - ${deleteConfirmModal.item.morador}` 
+                  : deleteConfirmModal.item.description}
+              </span>
+              <span className="summary-desc">{deleteConfirmModal.item.description}</span>
+              <span className="summary-amount expense">
+                R$ {deleteConfirmModal.item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
             </div>
-            <div className="modal-actions">
+            
+            <div className="confirm-modal-warning">
+              <AlertTriangle size={18} />
+              <span>Atenção: Esta ação é definitiva e não poderá ser desfeita.</span>
+            </div>
+
+            <div className="confirm-modal-actions">
               <button 
                 type="button" 
-                className="btn-cancel" 
+                className="btn-confirm-cancel" 
                 onClick={() => setDeleteConfirmModal({ isOpen: false, item: null, type: '' })}
                 disabled={loading}
               >
@@ -969,11 +979,12 @@ const Finance = () => {
               </button>
               <button 
                 type="button" 
-                className="btn-primary danger" 
+                className="btn-confirm-danger" 
                 onClick={handleDeleteTransaction}
                 disabled={loading}
               >
-                {loading ? 'Excluindo...' : 'Sim, Excluir'}
+                <Trash2 size={18} />
+                <span>{loading ? 'Excluindo...' : 'Sim, Excluir'}</span>
               </button>
             </div>
           </div>

@@ -32,6 +32,13 @@ const DevArea = () => {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [adminForm, setAdminForm] = useState({ nome: '', email: '', senha: '', role: 'admin' });
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    actionLabel: '',
+    onConfirm: null
+  });
 
   // Available avatar colors
   const colorOptions = [
@@ -120,23 +127,28 @@ const DevArea = () => {
     }
   };
 
-  const handleDeleteAdmin = async (id, email) => {
+  const handleDeleteAdmin = (id, email) => {
     if (email === 'welldeveloper@dev.com') {
       showToast('O desenvolvedor mestre não pode ser excluído!', 'error');
       return;
     }
-    const confirm = window.confirm(`Remover acesso de ${email}?`);
-    if (!confirm) return;
-
-    try {
-      const { error } = await supabase.from('admins').delete().eq('id', id);
-      if (error) throw error;
-      showToast('Acesso removido com sucesso!', 'success');
-      fetchAdmins();
-    } catch (err) {
-      console.error(err);
-      showToast('Erro ao remover acesso.', 'error');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirmar Exclusão',
+      message: `Tem certeza que deseja remover o acesso de administrador de ${email}?`,
+      actionLabel: 'Sim, Remover',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase.from('admins').delete().eq('id', id);
+          if (error) throw error;
+          showToast('Acesso removido com sucesso!', 'success');
+          fetchAdmins();
+        } catch (err) {
+          console.error(err);
+          showToast('Erro ao remover acesso.', 'error');
+        }
+      }
+    });
   };
 
   const checkConnection = async () => {
@@ -189,158 +201,167 @@ const DevArea = () => {
   };
 
   // Seed realistic test data
-  const handleSeedData = async () => {
+  const handleSeedData = () => {
     if (isSeeding) return;
-    const confirm = window.confirm("Deseja semear dados de teste? Isso vai cadastrar moradores fictícios e associá-los aos apartamentos com valores e status financeiros preenchidos.");
-    if (!confirm) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Gerar Dados de Teste',
+      message: 'Deseja semear dados de teste? Isso vai cadastrar moradores fictícios e associá-los aos apartamentos com valores e status financeiros preenchidos.',
+      actionLabel: 'Sim, Gerar Dados',
+      onConfirm: async () => {
+        try {
+          setIsSeeding(true);
+          showToast('Semeando dados no Supabase...', 'info');
 
-    try {
-      setIsSeeding(true);
-      showToast('Semeando dados no Supabase...', 'info');
+          // 1. Fetch apartments
+          const { data: aptos, error: errAptos } = await supabase.from('apartamentos').select('*');
+          if (errAptos) throw errAptos;
 
-      // 1. Fetch apartments
-      const { data: aptos, error: errAptos } = await supabase.from('apartamentos').select('*');
-      if (errAptos) throw errAptos;
-
-      if (!aptos || aptos.length === 0) {
-        throw new Error("Nenhum apartamento encontrado na tabela para associar.");
-      }
-
-      // 2. Clear existing residents and expenses
-      await supabase.from('moradores').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('despesas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-      // Realistic resident names and photos
-      // Realistic resident names and photos
-      const mockResidents = [
-        { nome: 'Julio Cesar', cpf: '123.456.789-00', telefone: '(11) 98765-4321', email: 'julio@email.com', local_trabalho: 'Advocacia Lima', dia_pagamento: 5 },
-        { nome: 'Sarinha De Oliveira Santos', cpf: '987.654.321-11', telefone: '(11) 91234-5678', email: 'sarinha@email.com', local_trabalho: 'Autônoma', dia_pagamento: 10 },
-        { nome: 'Carlos Eduardo', cpf: '456.789.123-22', telefone: '(11) 97777-8888', email: 'carlos@email.com', local_trabalho: 'SoftTech Corp', dia_pagamento: 15 },
-        { nome: 'Beatriz Costa', cpf: '789.123.456-33', telefone: '(11) 96666-5555', email: 'beatriz@email.com', local_trabalho: 'Estudante', dia_pagamento: 20 }
-      ];
-
-      // Some base64 sample avatars to make it gorgeous
-      const base64Avatars = [
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><circle cx='50' cy='50' r='50' fill='%23ff9a9e'/><text x='50' y='55' font-size='35' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>JC</text></svg>",
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><circle cx='50' cy='50' r='50' fill='%23a1c4fd'/><text x='50' y='55' font-size='35' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>SO</text></svg>",
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><circle cx='50' cy='50' r='50' fill='%23fbc2eb'/><text x='50' y='55' font-size='35' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>CE</text></svg>",
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><circle cx='50' cy='50' r='50' fill='%23d4fc79'/><text x='50' y='55' font-size='35' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>BC</text></svg>"
-      ];
-
-      // Reset all apartments to vacant first
-      for (let apto of aptos) {
-        await supabase.from('apartamentos').update({
-          status: 'vazio',
-          qtd_pessoas: 0,
-          data_entrada: null,
-          data_saida: null
-        }).eq('id', apto.id);
-      }
-
-      // 3. Insert and link residents to first few apartments
-      for (let i = 0; i < Math.min(mockResidents.length, aptos.length); i++) {
-        const apto = aptos[i];
-        const res = mockResidents[i];
-        
-        // Update apartment details
-        const rentValue = i === 0 ? 1250.00 : i === 1 ? 950.00 : i === 2 ? 1100.00 : 850.00;
-        const { error: errAptoUpdate } = await supabase.from('apartamentos').update({
-          status: 'ocupado',
-          qtd_pessoas: i === 1 ? 2 : 1, // Sarinha has 2 people
-          valor_aluguel: rentValue,
-          data_entrada: '2026-05-16',
-          data_saida: null
-        }).eq('id', apto.id);
-
-        if (errAptoUpdate) throw errAptoUpdate;
-
-        // Create resident linked to this apartment
-        const { error: errRes } = await supabase.from('moradores').insert({
-          nome: res.nome,
-          cpf: res.cpf,
-          telefone: res.telefone,
-          email: res.email,
-          apartamento_id: apto.id,
-          foto_url: base64Avatars[i],
-          local_trabalho: res.local_trabalho,
-          dia_pagamento: res.dia_pagamento
-        });
-
-        if (errRes) throw errRes;
-
-        // 4. Create financial invoices (one paid, one pending for demo)
-        await supabase.from('taxas').insert([
-          {
-            apartamento_id: apto.id,
-            descricao: 'Mensalidade de Aluguel - Maio',
-            valor: rentValue,
-            vencimento: '2026-05-10',
-            status: i % 2 === 0 ? 'pago' : 'pendente',
-            data_pagamento: i % 2 === 0 ? '2026-05-09T14:30:00Z' : null
+          if (!aptos || aptos.length === 0) {
+            throw new Error("Nenhum apartamento encontrado na tabela para associar.");
           }
-        ]);
+
+          // 2. Clear existing residents and expenses
+          await supabase.from('moradores').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          await supabase.from('despesas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+          // Realistic resident names and photos
+          const mockResidents = [
+            { nome: 'Julio Cesar', cpf: '123.456.789-00', telefone: '(11) 98765-4321', email: 'julio@email.com', local_trabalho: 'Advocacia Lima', dia_pagamento: 5 },
+            { nome: 'Sarinha De Oliveira Santos', cpf: '987.654.321-11', telefone: '(11) 91234-5678', email: 'sarinha@email.com', local_trabalho: 'Autônoma', dia_pagamento: 10 },
+            { nome: 'Carlos Eduardo', cpf: '456.789.123-22', telefone: '(11) 97777-8888', email: 'carlos@email.com', local_trabalho: 'SoftTech Corp', dia_pagamento: 15 },
+            { nome: 'Beatriz Costa', cpf: '789.123.456-33', telefone: '(11) 96666-5555', email: 'beatriz@email.com', local_trabalho: 'Estudante', dia_pagamento: 20 }
+          ];
+
+          // Some base64 sample avatars to make it gorgeous
+          const base64Avatars = [
+            "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><circle cx='50' cy='50' r='50' fill='%23ff9a9e'/><text x='50' y='55' font-size='35' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>JC</text></svg>",
+            "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><circle cx='50' cy='50' r='50' fill='%23a1c4fd'/><text x='50' y='55' font-size='35' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>SO</text></svg>",
+            "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><circle cx='50' cy='50' r='50' fill='%23fbc2eb'/><text x='50' y='55' font-size='35' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>CE</text></svg>",
+            "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><circle cx='50' cy='50' r='50' fill='%23d4fc79'/><text x='50' y='55' font-size='35' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>BC</text></svg>"
+          ];
+
+          // Reset all apartments to vacant first
+          for (let apto of aptos) {
+            await supabase.from('apartamentos').update({
+              status: 'vazio',
+              qtd_pessoas: 0,
+              data_entrada: null,
+              data_saida: null
+            }).eq('id', apto.id);
+          }
+
+          // 3. Insert and link residents to first few apartments
+          for (let i = 0; i < Math.min(mockResidents.length, aptos.length); i++) {
+            const apto = aptos[i];
+            const res = mockResidents[i];
+            
+            // Update apartment details
+            const rentValue = i === 0 ? 1250.00 : i === 1 ? 950.00 : i === 2 ? 1100.00 : 850.00;
+            const { error: errAptoUpdate } = await supabase.from('apartamentos').update({
+              status: 'ocupado',
+              qtd_pessoas: i === 1 ? 2 : 1, // Sarinha has 2 people
+              valor_aluguel: rentValue,
+              data_entrada: '2026-05-16',
+              data_saida: null
+            }).eq('id', apto.id);
+
+            if (errAptoUpdate) throw errAptoUpdate;
+
+            // Create resident linked to this apartment
+            const { error: errRes } = await supabase.from('moradores').insert({
+              nome: res.nome,
+              cpf: res.cpf,
+              telefone: res.telefone,
+              email: res.email,
+              apartamento_id: apto.id,
+              foto_url: base64Avatars[i],
+              local_trabalho: res.local_trabalho,
+              dia_pagamento: res.dia_pagamento
+            });
+
+            if (errRes) throw errRes;
+
+            // 4. Create financial invoices (one paid, one pending for demo)
+            await supabase.from('taxas').insert([
+              {
+                apartamento_id: apto.id,
+                descricao: 'Mensalidade de Aluguel - Maio',
+                valor: rentValue,
+                vencimento: '2026-05-10',
+                status: i % 2 === 0 ? 'pago' : 'pendente',
+                data_pagamento: i % 2 === 0 ? '2026-05-09T14:30:00Z' : null
+              }
+            ]);
+          }
+
+          // 5. Create some initial expenses
+          await supabase.from('despesas').insert([
+            { descricao: 'Manutenção de Elevador', valor: 450.00, vencimento: '2026-05-05', status: 'pago', data_pagamento: '2026-05-04T10:00:00Z', categoria: 'Manutenção' },
+            { descricao: 'Limpeza de Caixas d\'Água', valor: 380.00, vencimento: '2026-05-12', status: 'pago', data_pagamento: '2026-05-11T16:45:00Z', categoria: 'Limpeza' },
+            { descricao: 'Conta de Energia (Áreas Comuns)', valor: 215.40, vencimento: '2026-05-20', status: 'pendente', data_pagamento: null, categoria: 'Água/Luz' },
+            { descricao: 'Compra de Produtos de Higiene', valor: 85.90, vencimento: '2026-05-25', status: 'pendente', data_pagamento: null, categoria: 'Outros' }
+          ]);
+
+          showToast('Dados de teste gerados com sucesso!', 'success');
+          fetchStats();
+        } catch (e) {
+          console.error(e);
+          showToast(`Erro ao semear dados: ${e.message}`, 'error');
+        } finally {
+          setIsSeeding(false);
+        }
       }
-
-      // 5. Create some initial expenses
-      await supabase.from('despesas').insert([
-        { descricao: 'Manutenção de Elevador', valor: 450.00, vencimento: '2026-05-05', status: 'pago', data_pagamento: '2026-05-04T10:00:00Z', categoria: 'Manutenção' },
-        { descricao: 'Limpeza de Caixas d\'Água', valor: 380.00, vencimento: '2026-05-12', status: 'pago', data_pagamento: '2026-05-11T16:45:00Z', categoria: 'Limpeza' },
-        { descricao: 'Conta de Energia (Áreas Comuns)', valor: 215.40, vencimento: '2026-05-20', status: 'pendente', data_pagamento: null, categoria: 'Água/Luz' },
-        { descricao: 'Compra de Produtos de Higiene', valor: 85.90, vencimento: '2026-05-25', status: 'pendente', data_pagamento: null, categoria: 'Outros' }
-      ]);
-
-      showToast('Dados de teste gerados com sucesso!', 'success');
-      fetchStats();
-    } catch (e) {
-      console.error(e);
-      showToast(`Erro ao semear dados: ${e.message}`, 'error');
-    } finally {
-      setIsSeeding(false);
-    }
+    });
   };
 
   // Reset database (vacate all apartments and delete all residents)
-  const handleResetDatabase = async () => {
+  const handleResetDatabase = () => {
     if (isResetting) return;
-    const confirm = window.confirm("ATENÇÃO: Isso vai excluir todos os moradores, deletar todos os registros financeiros e desocupar todos os apartamentos! Deseja continuar?");
-    if (!confirm) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Limpar Banco de Dados',
+      message: 'ATENÇÃO: Isso vai excluir todos os moradores, deletar todos os registros financeiros e desocupar todos os apartamentos! Deseja continuar?',
+      actionLabel: 'Sim, Limpar Banco',
+      onConfirm: async () => {
+        try {
+          setIsResetting(true);
+          showToast('Limpando moradores e desocupando unidades...', 'info');
 
-    try {
-      setIsResetting(true);
-      showToast('Limpando moradores e desocupando unidades...', 'info');
+          // 1. Delete all residents
+          const { error: errRes } = await supabase.from('moradores').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          if (errRes) throw errRes;
 
-      // 1. Delete all residents
-      const { error: errRes } = await supabase.from('moradores').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (errRes) throw errRes;
+          // 2. Delete all financial transactions (revenues & expenses)
+          const { error: errTaxas } = await supabase.from('taxas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          if (errTaxas) throw errTaxas;
 
-      // 2. Delete all financial transactions (revenues & expenses)
-      const { error: errTaxas } = await supabase.from('taxas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (errTaxas) throw errTaxas;
+          const { error: errDespesas } = await supabase.from('despesas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          if (errDespesas) throw errDespesas;
 
-      const { error: errDespesas } = await supabase.from('despesas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (errDespesas) throw errDespesas;
+          // 3. Reset apartments status
+          const { data: aptos, error: errAptos } = await supabase.from('apartamentos').select('id');
+          if (errAptos) throw errAptos;
 
-      // 3. Reset apartments status
-      const { data: aptos, error: errAptos } = await supabase.from('apartamentos').select('id');
-      if (errAptos) throw errAptos;
+          for (let apto of aptos) {
+            await supabase.from('apartamentos').update({
+              status: 'vazio',
+              qtd_pessoas: 0,
+              data_entrada: null,
+              data_saida: null
+            }).eq('id', apto.id);
+          }
 
-      for (let apto of aptos) {
-        await supabase.from('apartamentos').update({
-          status: 'vazio',
-          qtd_pessoas: 0,
-          data_entrada: null,
-          data_saida: null
-        }).eq('id', apto.id);
+          showToast('Banco de dados limpo com sucesso!', 'success');
+          fetchStats();
+        } catch (e) {
+          console.error(e);
+          showToast(`Erro ao resetar: ${e.message}`, 'error');
+        } finally {
+          setIsResetting(false);
+        }
       }
-
-      showToast('Banco de dados limpo com sucesso!', 'success');
-      fetchStats();
-    } catch (e) {
-      console.error(e);
-      showToast(`Erro ao resetar: ${e.message}`, 'error');
-    } finally {
-      setIsResetting(false);
-    }
+    });
   };
 
   return (
@@ -683,6 +704,47 @@ const DevArea = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Genérico de Confirmação */}
+      {confirmModal.isOpen && (
+        <div className="confirm-modal-overlay" onClick={() => setConfirmModal({ isOpen: false, title: '', message: '', actionLabel: '', onConfirm: null })}>
+          <div className={`confirm-modal-card ${confirmModal.title.includes('Gerar') ? 'warning' : 'danger'}`} onClick={e => e.stopPropagation()}>
+            <div className={`confirm-modal-icon ${confirmModal.title.includes('Gerar') ? 'warning' : 'danger'}`}>
+              {confirmModal.title.includes('Gerar') ? <AlertTriangle size={32} /> : <Trash2 size={32} />}
+            </div>
+            <h2 className="confirm-modal-title">{confirmModal.title}</h2>
+            <p className="confirm-modal-text">{confirmModal.message}</p>
+            
+            {confirmModal.title.includes('Limpar') && (
+              <div className="confirm-modal-warning">
+                <AlertTriangle size={18} />
+                <span>Atenção: Esta ação limpará todo o banco de dados e não poderá ser desfeita.</span>
+              </div>
+            )}
+
+            <div className="confirm-modal-actions">
+              <button 
+                type="button" 
+                className="btn-confirm-cancel"
+                onClick={() => setConfirmModal({ isOpen: false, title: '', message: '', actionLabel: '', onConfirm: null })}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button" 
+                className={confirmModal.title.includes('Gerar') ? 'btn-confirm-success' : 'btn-confirm-danger'}
+                onClick={() => {
+                  if (confirmModal.onConfirm) confirmModal.onConfirm();
+                  setConfirmModal({ isOpen: false, title: '', message: '', actionLabel: '', onConfirm: null });
+                }}
+              >
+                {confirmModal.title.includes('Gerar') ? <AlertTriangle size={18} /> : <Trash2 size={18} />}
+                <span>{confirmModal.actionLabel}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

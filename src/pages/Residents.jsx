@@ -10,7 +10,8 @@ import {
   CheckCircle,
   Clock,
   Pencil,
-  Trash2
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import './Residents.css';
 
@@ -223,29 +224,36 @@ const Residents = () => {
       </Link>
 
       {deleteModal.isOpen && (
-        <div className="modal-overlay" onClick={() => setDeleteModal({ isOpen: false, id: null, name: '', apto_id: null })}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Confirmar Exclusão</h2>
+        <div className="confirm-modal-overlay" onClick={() => setDeleteModal({ isOpen: false, id: null, name: '', apto_id: null })}>
+          <div className="confirm-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="confirm-modal-icon danger">
+              <Trash2 size={32} />
             </div>
-            <div className="modal-body">
-              <p>Tem certeza que deseja excluir o morador <strong>{deleteModal.name}</strong>?</p>
-              <p className="modal-warning">Esta ação não poderá ser desfeita e o apartamento ficará vazio.</p>
+            <h2 className="confirm-modal-title">Confirmar Exclusão</h2>
+            <p className="confirm-modal-text">
+              Tem certeza que deseja excluir o morador <strong>{deleteModal.name}</strong>?
+            </p>
+            <div className="confirm-modal-warning">
+              <AlertTriangle size={18} />
+              <span>Esta ação não poderá ser desfeita e o apartamento ficará vazio.</span>
             </div>
-            <div className="modal-actions">
+            <div className="confirm-modal-actions">
               <button 
-                className="btn-cancel" 
+                type="button"
+                className="btn-confirm-cancel" 
                 onClick={() => setDeleteModal({ isOpen: false, id: null, name: '', apto_id: null })}
                 disabled={loading}
               >
                 Cancelar
               </button>
               <button 
-                className="btn-danger" 
+                type="button"
+                className="btn-confirm-danger" 
                 onClick={() => handleDelete(deleteModal.id, deleteModal.apto_id)}
                 disabled={loading}
               >
-                {loading ? 'Excluindo...' : 'Sim, Excluir'}
+                <Trash2 size={18} />
+                <span>{loading ? 'Excluindo...' : 'Sim, Excluir'}</span>
               </button>
             </div>
           </div>

@@ -16,7 +16,8 @@ import {
   History,
   Plus,
   Pencil,
-  Trash2
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import './ApartmentDetailsModal.css';
 import { formatCurrency as formatMoney, parseCurrency } from '../utils/formatters';
@@ -48,6 +49,7 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
     data_saida: ''
   });
   const [savingHist, setSavingHist] = useState(false);
+  const [deleteHistModal, setDeleteHistModal] = useState({ isOpen: false, id: null, morador_nome: '' });
   const [allResidents, setAllResidents] = useState([]);
   const [aptFormData, setAptFormData] = useState({
     morador_id: '',
@@ -398,16 +400,17 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
     }
   };
 
-  const handleDeleteHistory = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir este registro do histórico?')) return;
+  const confirmDeleteHistory = async () => {
+    if (!deleteHistModal.id) return;
     try {
       setSavingHist(true);
       const { error } = await supabase
         .from('historico_moradores')
         .delete()
-        .eq('id', id);
+        .eq('id', deleteHistModal.id);
 
       if (error) throw error;
+      setDeleteHistModal({ isOpen: false, id: null, morador_nome: '' });
       await fetchApartmentDetails();
     } catch (err) {
       console.error('Erro ao excluir histórico:', err);
@@ -950,7 +953,7 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
                                 className="action-btn delete" 
                                 title="Excluir" 
                                 style={{ background: '#fff5f5', border: 'none', padding: '6px', borderRadius: '6px', color: '#ef4444', cursor: 'pointer' }}
-                                onClick={() => handleDeleteHistory(hist.id)}
+                                onClick={() => setDeleteHistModal({ isOpen: true, id: hist.id, morador_nome: hist.morador_nome })}
                               >
                                 <Trash2 size={15} />
                               </button>
@@ -968,6 +971,43 @@ const ApartmentDetailsModal = ({ isOpen, onClose, apartmentId, onUpdate }) => {
           </>
         )}
       </div>
+
+      {deleteHistModal.isOpen && (
+        <div className="confirm-modal-overlay" onClick={() => setDeleteHistModal({ isOpen: false, id: null, morador_nome: '' })}>
+          <div className="confirm-modal-card danger" onClick={e => e.stopPropagation()}>
+            <div className="confirm-modal-icon danger">
+              <Trash2 size={32} />
+            </div>
+            <h2 className="confirm-modal-title">Confirmar Exclusão</h2>
+            <p className="confirm-modal-text">
+              Tem certeza que deseja excluir o registro de histórico de <strong>{deleteHistModal.morador_nome}</strong>?
+            </p>
+            <div className="confirm-modal-warning">
+              <AlertTriangle size={18} />
+              <span>Esta ação é definitiva e removerá este registro do histórico da unidade.</span>
+            </div>
+            <div className="confirm-modal-actions">
+              <button 
+                type="button" 
+                className="btn-confirm-cancel" 
+                onClick={() => setDeleteHistModal({ isOpen: false, id: null, morador_nome: '' })}
+                disabled={savingHist}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button" 
+                className="btn-confirm-danger" 
+                onClick={confirmDeleteHistory}
+                disabled={savingHist}
+              >
+                <Trash2 size={18} />
+                <span>{savingHist ? 'Excluindo...' : 'Sim, Excluir'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
